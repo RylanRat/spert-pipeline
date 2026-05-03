@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Spert — AI Research Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--bg1:#111113;--bg2:#18181b;--bg3:#27272a;--bg4:#3f3f46;
+  --fg:#fafafa;--fg2:#a1a1aa;--fg3:#71717a;--fg4:#52525b;
+  --accent:#f97316;--accent2:#fb923c;--accentd:#c2410c;
+  --accentbg:rgba(249,115,22,.12);--accentbord:rgba(249,115,22,.3);
+  --blue:#3b82f6;--bluebg:rgba(59,130,246,.1);--bluebord:rgba(59,130,246,.3);
+  --green:#22c55e;--greenbg:rgba(34,197,94,.1);--greenbord:rgba(34,197,94,.3);
+  --amber:#f59e0b;--amberbg:rgba(245,158,11,.1);--amberbord:rgba(245,158,11,.3);
+  --red:#ef4444;--redbg:rgba(239,68,68,.1);--redbord:rgba(239,68,68,.3);
+  --purple:#a855f7;--purplebg:rgba(168,85,247,.1);--purplebord:rgba(168,85,247,.3);
+  --teal:#14b8a6;--tealbg:rgba(20,184,166,.1);--tealbord:rgba(20,184,166,.3);
+  --r:8px;--r2:12px;--r3:16px;
+  --ff:'Geist',sans-serif;--fm:'Geist Mono',monospace;--fd:'Instrument Serif',serif;
+  --bord:1px solid var(--bg3);
+  --shadow:0 0 0 1px rgba(255,255,255,.05),0 4px 24px rgba(0,0,0,.4);
+  --glow:0 0 40px rgba(249,115,22,.15);
+}
+html{font-size:15px}
+body{font-family:var(--ff);background:var(--bg);color:var(--fg);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ── GRAIN OVERLAY ── */
+body::before{content:'';position:fixed;inset:0;opacity:.03;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")}
+
+/* ── APP SHELL ── */
+#app{display:flex;flex-direction:column;min-height:100vh}
+
+/* ── TOP NAV ── */
+.nav{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;gap:0;
+  background:rgba(9,9,11,.85);border-bottom:var(--bord);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.nav-brand{
+  display:flex;align-items:center;gap:8px;
+  padding:14px 20px;border-right:var(--bord);
+  text-decoration:none;flex-shrink:0;
+}
+.nav-mark{
+  width:28px;height:28px;border-radius:6px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accentd));
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.nav-name{font-family:var(--fd);font-size:17px;color:var(--fg);letter-spacing:-.02em}
+.nav-tabs{display:flex;flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nav-tab{
+  padding:14px 18px;font-size:13px;font-weight:500;color:var(--fg3);
+  cursor:pointer;border:none;background:none;font-family:var(--ff);
+  border-bottom:2px solid transparent;white-space:nowrap;
+  transition:color .15s,border-color .15s;-webkit-tap-highlight-color:transparent;
+}
+.nav-tab:hover{color:var(--fg2)}
+.nav-tab.active{color:var(--fg);border-bottom-color:var(--accent)}
+.nav-status{padding:0 16px;flex-shrink:0}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--fg4);display:inline-block;transition:background .3s}
+.status-dot.on{background:var(--green);box-shadow:0 0 6px var(--green)}
+
+/* ── TAB PANELS ── */
+.tab-panel{display:none;flex:1;flex-direction:column}
+.tab-panel.active{display:flex}
+
+/* ══════════════════════════════════════════
+   PIPELINE TAB
+══════════════════════════════════════════ */
+.pipeline-layout{display:flex;flex-direction:column;flex:1}
+
+/* HERO */
+.hero{
+  padding:32px 24px 28px;
+  background:linear-gradient(160deg,var(--bg1) 0%,var(--bg) 100%);
+  border-bottom:var(--bord);position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;
+  background:radial-gradient(circle,rgba(249,115,22,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-title{font-family:var(--fd);font-size:clamp(22px,5vw,32px);font-weight:400;letter-spacing:-.03em;line-height:1.15;margin-bottom:6px}
+.hero-title em{font-style:italic;color:var(--accent)}
+.hero-sub{font-size:13px;color:var(--fg3);line-height:1.5}
+
+/* FORM AREA */
+.pipeline-form{padding:20px 24px;display:flex;flex-direction:column;gap:16px;flex:1}
+
+/* INTENT BANNER */
+.intent-banner{
+  display:none;border:1px solid var(--accentbord);border-radius:var(--r2);
+  background:var(--accentbg);padding:12px 14px;
+  font-size:13px;line-height:1.6;color:var(--fg2);
+}
+.intent-banner strong{color:var(--accent)}
+
+/* INPUT AREA */
+.input-wrap{position:relative}
+.main-textarea{
+  width:100%;min-height:130px;padding:14px;padding-bottom:44px;
+  font-size:15px;line-height:1.65;font-family:var(--ff);
+  border:1px solid var(--bg3);border-radius:var(--r3);
+  background:var(--bg1);color:var(--fg);outline:none;resize:vertical;
+  -webkit-appearance:none;transition:border-color .15s;
+}
+.main-textarea:focus{border-color:var(--accent)}
+.main-textarea::placeholder{color:var(--fg4)}
+.input-toolbar{
+  position:absolute;bottom:10px;left:10px;right:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.toolbar-btn{
+  display:flex;align-items:center;gap:5px;padding:5px 10px;
+  font-size:11px;font-weight:500;font-family:var(--fm);
+  border:1px solid var(--bg3);border-radius:6px;
+  background:var(--bg2);color:var(--fg3);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:all .15s;white-space:nowrap;
+}
+.toolbar-btn:hover{border-color:var(--fg4);color:var(--fg2)}
+.toolbar-btn.active{border-color:var(--accentbord);background:var(--accentbg);color:var(--accent)}
+.char-count{margin-left:auto;font-size:11px;color:var(--fg4);font-family:var(--fm)}
+
+/* FILE ATTACHMENTS */
+#fileList{display:flex;flex-wrap:wrap;gap:6px;margin-top:-8px}
+.file-chip{
+  display:flex;align-items:center;gap:6px;padding:5px 10px;
+  border:1px solid var(--bg3);border-radius:6px;background:var(--bg2);
+  font-size:11px;color:var(--fg2);font-family:var(--fm);
+}
+.file-chip .rm{cursor:pointer;color:var(--fg4);font-size:13px;line-height:1;margin-left:2px}
+.file-chip .rm:hover{color:var(--red)}
+
+/* CONFIG GRID */
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.config-card{
+  border:var(--bord);border-radius:var(--r2);background:var(--bg1);
+  padding:14px;display:flex;flex-direction:column;gap:10px;
+}
+.config-card.full{grid-column:1/-1}
+.config-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg3);font-family:var(--fm)}
+
+/* MODE SELECTOR */
+.mode-select{
+  width:100%;padding:9px 12px;font-size:13px;font-family:var(--ff);
+  border:1px solid var(--bg3);border-radius:var(--r);
+  background:var(--bg2);color:var(--fg);outline:none;-webkit-appearance:none;
+  cursor:pointer;
+}
+.mode-select:focus{border-color:var(--accent)}
+
+/* VOICE CHIPS */
+.voice-row{display:flex;gap:5px;flex-wrap:wrap}
+.vchip{
+  padding:5px 10px;border-radius:6px;border:1px solid var(--bg3);
+  font-size:12px;font-weight:500;color:var(--fg3);background:var(--bg2);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;
+}
+.vchip:hover{border-color:var(--fg4);color:var(--fg2)}
+.vchip.sel{border-color:var(--accentbord);background:var(--accentbg);color:var(--accent)}
+
+/* PASSES CONTROL */
+.passes-row{display:flex;align-items:center;gap:8px}
+.passes-btn{
+  width:28px;height:28px;border-radius:6px;border:1px solid var(--bg3);
+  background:var(--bg2);color:var(--fg2);font-size:16px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all .15s;flex-shrink:0;-webkit-tap-highlight-color:transparent;
+}
+.passes-btn:hover{border-color:var(--fg4);color:var(--fg)}
+.passes-num{
+  width:44px;text-align:center;padding:5px;font-size:14px;font-weight:600;
+  font-family:var(--fm);border:1px solid var(--bg3);border-radius:6px;
+  background:var(--bg2);color:var(--fg);outline:none;
+}
+.passes-desc{font-size:11px;color:var(--fg4);line-height:1.4}
+
+/* CONSENSUS TOGGLE */
+.toggle-row{display:flex;align-items:center;gap:10px}
+.toggle{
+  width:36px;height:20px;border-radius:10px;background:var(--bg3);
+  position:relative;cursor:pointer;flex-shrink:0;transition:background .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.toggle.on{background:var(--accent)}
+.toggle::after{
+  content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;
+  border-radius:50%;background:#fff;transition:transform .2s;
+}
+.toggle.on::after{transform:translateX(16px)}
+.toggle-label{font-size:12px;color:var(--fg2);line-height:1.4}
+
+/* RUN BUTTON */
+.run-btn{
+  width:100%;padding:14px;font-size:15px;font-weight:600;font-family:var(--ff);
+  background:linear-gradient(135deg,var(--accent),var(--accentd));
+  color:#fff;border:none;border-radius:var(--r2);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  box-shadow:var(--glow);transition:opacity .15s,transform .1s;
+  letter-spacing:-.01em;
+}
+.run-btn:active{opacity:.85;transform:scale(.99)}
+.run-btn:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ── PIPELINE RUNNER ── */
+.runner{display:none;flex-direction:column;flex:1;padding:16px 24px;gap:10px}
+.runner.active{display:flex}
+
+.flow-bar{
+  display:flex;align-items:center;gap:5px;padding:10px 14px;
+  border:var(--bord);border-radius:var(--r2);background:var(--bg1);
+  overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;
+}
+.fchip{
+  font-size:11px;font-weight:500;font-family:var(--fm);
+  padding:3px 9px;border-radius:99px;border:1px solid var(--bg3);
+  white-space:nowrap;color:var(--fg3);background:var(--bg);flex-shrink:0;transition:all .2s;
+}
+.fchip.fa{border-color:var(--bluebord);background:var(--bluebg);color:var(--blue)}
+.fchip.fd{border-color:var(--greenbord);background:var(--greenbg);color:var(--green)}
+.fchip.fw{border-color:var(--amberbord);background:var(--amberbg);color:var(--amber)}
+.farr{font-size:10px;color:var(--fg4);flex-shrink:0}
+
+.ncard{
+  border:1px solid var(--bg3);border-radius:var(--r2);
+  background:var(--bg1);overflow:hidden;
+  box-shadow:var(--shadow);transition:border-color .2s;
+}
+.ncard.na{border-color:var(--bluebord)}
+.ncard.nw{border-color:var(--amberbord)}
+.ncard.ne{border-color:var(--redbord)}
+.nhead{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.nhead:active{background:var(--bg2)}
+.nicon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--bg2);flex-shrink:0;transition:background .2s}
+.nia{background:var(--bluebg)}
+.nid{background:var(--greenbg)}
+.niw{background:var(--amberbg)}
+.nie{background:var(--redbg)}
+.ninfo{flex:1;min-width:0}
+.nname{font-size:13px;font-weight:600;color:var(--fg)}
+.ndesc{font-size:11px;color:var(--fg3);margin-top:2px;font-family:var(--fm)}
+.nbadge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;flex-shrink:0;white-space:nowrap;font-family:var(--fm)}
+.bi{background:var(--bg3);color:var(--fg4)}
+.ba{background:var(--bluebg);color:var(--blue)}
+.bd{background:var(--greenbg);color:var(--green)}
+.bw{background:var(--amberbg);color:var(--amber)}
+.be{background:var(--redbg);color:var(--red)}
+.chev{font-size:9px;color:var(--fg4);transition:transform .2s;flex-shrink:0}
+.chev.open{transform:rotate(180deg)}
+.nbody{display:none;padding:14px;border-top:var(--bord)}
+.nbody.open{display:block}
+.slbl{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg3);margin-bottom:8px;font-family:var(--fm)}
+.mono{
+  background:var(--bg);border-radius:var(--r);padding:12px;
+  font-family:var(--fm);font-size:11.5px;white-space:pre-wrap;line-height:1.65;
+  color:var(--fg3);max-height:240px;overflow-y:auto;word-break:break-word;
+  border:var(--bord);-webkit-overflow-scrolling:touch;
+}
+.rbox{border-radius:var(--r);padding:12px;font-size:13.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.rp{background:var(--greenbg);color:var(--green);border:1px solid var(--greenbord)}
+.rf{background:var(--redbg);color:var(--red);border:1px solid var(--redbord)}
+.rn{background:var(--bg2);color:var(--fg);border:var(--bord)}
+.wmsg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg3);padding:3px 0}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--bg3);border-top-color:var(--blue);border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+.gap10{margin-bottom:10px}
+.tmr{font-size:11px;color:var(--blue);font-family:var(--fm)}
+.prov-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--fg4);font-family:var(--fm);margin-top:6px}
+.warn-note{font-size:11px;color:var(--amber);margin-top:6px;font-family:var(--fm)}
+.pass-progress{
+  display:flex;align-items:center;gap:6px;font-size:11px;color:var(--fg3);
+  font-family:var(--fm);padding:6px 0;
+}
+.pass-dots{display:flex;gap:3px}
+.pdot{width:8px;height:8px;border-radius:50%;background:var(--bg3);transition:background .3s}
+.pdot.done{background:var(--green)}
+.pdot.active{background:var(--blue)}
+
+/* FINAL */
+.final-card{
+  border:1px solid var(--greenbord);border-radius:var(--r2);
+  background:var(--bg1);overflow:hidden;box-shadow:0 0 30px rgba(34,197,94,.08);
+}
+.final-head{
+  background:var(--greenbg);padding:12px 14px;
+  display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--greenbord);
+}
+.final-title{font-size:14px;font-weight:600;color:var(--green);flex:1;font-family:var(--fd)}
+.final-actions{display:flex;gap:6px}
+.fac-btn{
+  font-size:11px;padding:5px 11px;border-radius:6px;font-family:var(--fm);font-weight:500;
+  border:1px solid var(--greenbord);background:transparent;color:var(--green);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s;
+}
+.fac-btn:active{background:var(--greenbg)}
+.final-body{padding:14px}
+#finalText{font-size:15px;line-height:1.8;white-space:pre-wrap;word-break:break-word;color:var(--fg)}
+
+/* CLARIFICATION CARD */
+.clarify-card{
+  border:1px solid var(--accentbord);border-radius:var(--r2);
+  background:var(--accentbg);padding:16px;display:none;flex-direction:column;gap:10px;
+}
+.clarify-card.show{display:flex}
+.clarify-q{font-size:14px;color:var(--fg);line-height:1.6}
+.clarify-input{
+  width:100%;padding:10px 12px;font-size:14px;font-family:var(--ff);
+  border:1px solid var(--accentbord);border-radius:var(--r);
+  background:var(--bg);color:var(--fg);outline:none;
+}
+.clarify-input:focus{border-color:var(--accent)}
+.clarify-btns{display:flex;gap:8px}
+.btn-sm{
+  padding:7px 14px;font-size:13px;font-weight:500;font-family:var(--ff);
+  border-radius:var(--r);border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-secondary{background:var(--bg3);color:var(--fg2)}
+
+/* ══════════════════════════════════════════
+   SETTINGS TAB
+══════════════════════════════════════════ */
+.settings-layout{padding:24px;display:flex;flex-direction:column;gap:20px;max-width:600px;margin:0 auto;width:100%}
+.settings-section{display:flex;flex-direction:column;gap:10px}
+.settings-title{font-family:var(--fd);font-size:18px;letter-spacing:-.02em;margin-bottom:4px}
+.settings-desc{font-size:13px;color:var(--fg3);line-height:1.5}
+.key-card{border:var(--bord);border-radius:var(--r2);background:var(--bg1);padding:14px;display:flex;flex-direction:column;gap:10px}
+.key-row2{display:flex;flex-direction:column;gap:5px}
+.key-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--fg2)}
+.key-badge2{font-size:9px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:99px;text-transform:uppercase}
+.kb-best{background:rgba(34,197,94,.15);color:var(--green)}
+.kb-fast{background:rgba(59,130,246,.15);color:var(--blue)}
+.kb-eu{background:rgba(168,85,247,.15);color:var(--purple)}
+.kb-more{background:rgba(245,158,11,.15);color:var(--amber)}
+.key-input{
+  width:100%;padding:9px 12px;font-size:13px;font-family:var(--fm);
+  border:1px solid var(--bg3);border-radius:var(--r);
+  background:var(--bg);color:var(--fg);outline:none;-webkit-appearance:none;transition:border-color .15s;
+}
+.key-input:focus{border-color:var(--accent)}
+.key-hint{font-size:11px;color:var(--fg4);line-height:1.5}
+.key-hint a{color:var(--accent);text-decoration:none}
+.save-keys-btn{
+  padding:10px;font-size:13px;font-weight:600;font-family:var(--ff);
+  border:none;border-radius:var(--r);background:var(--accent);color:#fff;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .15s;
+}
+.save-keys-btn:active{opacity:.8}
+.save-msg{font-size:12px;color:var(--green);font-family:var(--fm);display:none}
+
+/* SUPABASE SETUP */
+.supabase-banner{
+  border:1px solid var(--bluebord);border-radius:var(--r2);
+  background:var(--bluebg);padding:14px;font-size:13px;color:var(--fg2);line-height:1.6;
+}
+.supabase-banner strong{color:var(--blue)}
+.supabase-banner a{color:var(--blue)}
+.sb-inputs{display:flex;flex-direction:column;gap:8px}
+.sb-input{
+  width:100%;padding:9px 12px;font-size:13px;font-family:var(--fm);
+  border:1px solid var(--bluebord);border-radius:var(--r);
+  background:var(--bg);color:var(--fg);outline:none;
+}
+.sb-input:focus{border-color:var(--blue)}
+.sb-status{font-size:12px;font-family:var(--fm);margin-top:4px}
+
+/* CUSTOM MODES */
+.modes-list{display:flex;flex-direction:column;gap:6px}
+.mode-item{
+  border:var(--bord);border-radius:var(--r);background:var(--bg2);
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+}
+.mode-item-name{font-size:13px;font-weight:600;flex:1}
+.mode-item-desc{font-size:11px;color:var(--fg3);font-family:var(--fm)}
+.mode-item-actions{display:flex;gap:5px}
+.mode-act-btn{
+  font-size:11px;padding:4px 9px;border-radius:5px;
+  border:1px solid var(--bg3);background:transparent;color:var(--fg3);cursor:pointer;
+}
+.mode-act-btn:hover{color:var(--fg2);border-color:var(--fg4)}
+.mode-act-btn.del:hover{color:var(--red);border-color:var(--redbord)}
+.add-mode-form{border:var(--bord);border-radius:var(--r2);background:var(--bg1);padding:14px;display:flex;flex-direction:column;gap:10px}
+.add-mode-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form-input{
+  width:100%;padding:8px 11px;font-size:13px;font-family:var(--ff);
+  border:1px solid var(--bg3);border-radius:var(--r);
+  background:var(--bg);color:var(--fg);outline:none;
+}
+.form-input:focus{border-color:var(--accent)}
+.form-select{
+  width:100%;padding:8px 11px;font-size:13px;font-family:var(--ff);
+  border:1px solid var(--bg3);border-radius:var(--r);
+  background:var(--bg);color:var(--fg);outline:none;cursor:pointer;
+}
+.btn-add{
+  padding:9px 14px;font-size:13px;font-weight:600;font-family:var(--ff);
+  border:none;border-radius:var(--r);background:var(--accent);color:#fff;cursor:pointer;
+}
+
+/* ══════════════════════════════════════════
+   MODELS TAB
+══════════════════════════════════════════ */
+.models-layout{padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+.bundle-bar{display:flex;gap:6px;flex-wrap:wrap}
+.bbtn{
+  padding:6px 13px;font-size:12px;font-weight:600;font-family:var(--fm);
+  border-radius:99px;border:1px solid var(--bg3);background:var(--bg2);color:var(--fg3);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;
+}
+.bbtn:hover{border-color:var(--fg4);color:var(--fg2)}
+.bbtn.act{border-color:var(--accentbord);background:var(--accentbg);color:var(--accent)}
+.model-list{display:flex;flex-direction:column;gap:5px}
+.mrow{
+  border:1px solid var(--bg3);border-radius:var(--r);background:var(--bg2);
+  padding:11px 13px;display:flex;align-items:center;gap:11px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s;
+}
+.mrow:hover{border-color:var(--bg4);background:var(--bg2)}
+.mrow.sel{border-color:var(--accentbord);background:var(--accentbg)}
+.mchk{
+  width:17px;height:17px;border-radius:4px;border:1.5px solid var(--bg4);
+  display:flex;align-items:center;justify-content:center;font-size:10px;
+  flex-shrink:0;transition:all .15s;color:transparent;
+}
+.mrow.sel .mchk{background:var(--accent);border-color:var(--accent);color:#fff}
+.minfo{flex:1;min-width:0}
+.mname{font-size:13px;font-weight:600;color:var(--fg)}
+.mmeta{font-size:11px;color:var(--fg3);margin-top:2px;font-family:var(--fm)}
+.mtags{display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.mtag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;letter-spacing:.04em;white-space:nowrap}
+.mt-s{background:rgba(34,197,94,.12);color:var(--green)}
+.mt-q{background:rgba(59,130,246,.12);color:var(--blue)}
+.mt-r{background:rgba(168,85,247,.12);color:var(--purple)}
+.mt-w{background:rgba(20,184,166,.12);color:var(--teal)}
+.model-summary-bar{
+  border:var(--bord);border-radius:var(--r);background:var(--bg1);
+  padding:10px 13px;font-size:12px;color:var(--fg2);line-height:1.6;
+  border-left:2px solid var(--accent);
+}
+
+/* ══════════════════════════════════════════
+   UPGRADE TAB
+══════════════════════════════════════════ */
+.upgrade-layout{display:flex;flex-direction:column;flex:1;padding:20px 24px;gap:14px}
+.upgrade-history{
+  flex:1;display:flex;flex-direction:column;gap:8px;
+  min-height:200px;max-height:50vh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.upgrade-msg{
+  border:var(--bord);border-radius:var(--r2);padding:12px 14px;
+  font-size:13px;line-height:1.65;
+}
+.upgrade-msg.user{background:var(--accentbg);border-color:var(--accentbord);color:var(--fg)}
+.upgrade-msg.ai{background:var(--bg2);color:var(--fg2)}
+.upgrade-msg.ai strong{color:var(--accent)}
+.upgrade-msg.ai code{font-family:var(--fm);font-size:11.5px;background:var(--bg);border-radius:4px;padding:1px 5px;color:var(--fg3)}
+.upgrade-input-row{display:flex;gap:8px;align-items:flex-end}
+.upgrade-input{
+  flex:1;padding:11px 13px;font-size:14px;font-family:var(--ff);
+  border:1px solid var(--bg3);border-radius:var(--r2);
+  background:var(--bg1);color:var(--fg);outline:none;resize:none;min-height:48px;max-height:120px;
+  -webkit-appearance:none;transition:border-color .15s;
+}
+.upgrade-input:focus{border-color:var(--accent)}
+.upgrade-send{
+  padding:11px 16px;font-size:14px;font-family:var(--ff);font-weight:600;
+  border:none;border-radius:var(--r2);background:var(--accent);color:#fff;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;flex-shrink:0;
+}
+.upgrade-send:disabled{opacity:.3;cursor:not-allowed}
+.dl-banner{
+  display:none;border:1px solid var(--greenbord);border-radius:var(--r);
+  background:var(--greenbg);padding:12px 14px;
+  font-size:13px;color:var(--green);line-height:1.5;
+}
+
+/* ── MISC ── */
+.divider{height:1px;background:var(--bg3);width:100%}
+.hidden{display:none!important}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-mark">⚡</div>
+    <span class="nav-name">Spert</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('pipeline')">Pipeline</button>
+    <button class="nav-tab" onclick="showTab('models')">Models</button>
+    <button class="nav-tab" onclick="showTab('settings')">Settings</button>
+    <button class="nav-tab" onclick="showTab('upgrade')">Upgrade</button>
+  </div>
+  <div class="nav-status"><div class="status-dot" id="statusDot"></div></div>
+</nav>
+
+<!-- ══════ PIPELINE TAB ══════ -->
+<div class="tab-panel active" id="tab-pipeline">
+<div class="pipeline-layout">
+
+  <div class="hero">
+    <h1 class="hero-title">Research · Verify · <em>Polish</em></h1>
+    <p class="hero-sub">Multi-model AI pipeline with consensus, intent detection &amp; fact-checking</p>
+  </div>
+
+  <div class="pipeline-form" id="pipelineForm">
+
+    <!-- INTENT BANNER -->
+    <div class="intent-banner" id="intentBanner"></div>
+
+    <!-- CLARIFY CARD -->
+    <div class="clarify-card" id="clarifyCard">
+      <div class="clarify-q" id="clarifyQ"></div>
+      <input class="clarify-input" id="clarifyInput" placeholder="Your answer…">
+      <div class="clarify-btns">
+        <button class="btn-sm btn-primary" onclick="answerClarify()">Continue →</button>
+        <button class="btn-sm btn-secondary" onclick="skipClarify()">Skip, just run</button>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+    <div>
+      <div class="input-wrap">
+        <textarea class="main-textarea" id="mainInput"
+          placeholder="Describe what you want — paste an article, ask a question, upload a file, or type a topic. I'll figure out what you need."
+          oninput="onInputChange()" onblur="detectIntent()"></textarea>
+        <div class="input-toolbar">
+          <button class="toolbar-btn" onclick="document.getElementById('fileInput').click()">📎 Attach</button>
+          <button class="toolbar-btn" id="webSearchBtn" onclick="toggleWebSearch()">🔍 Web search</button>
+          <button class="toolbar-btn" id="pdfOutBtn" onclick="togglePdfOut()">📄 PDF out</button>
+          <span class="char-count" id="charCount">0</span>
+        </div>
+      </div>
+      <input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt,.md" onchange="handleFiles(this.files)">
+      <div id="fileList"></div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="config-grid">
+
+      <div class="config-card">
+        <div class="config-label">Mode</div>
+        <select class="mode-select" id="modeSelect" onchange="onModeChange()"></select>
+      </div>
+
+      <div class="config-card">
+        <div class="config-label">Voice</div>
+        <div class="voice-row" id="voiceRow">
+          <div class="vchip sel" data-v="neutral" onclick="setVoice(this)">Neutral</div>
+          <div class="vchip" data-v="academic" onclick="setVoice(this)">Academic</div>
+          <div class="vchip" data-v="journalist" onclick="setVoice(this)">Journalist</div>
+          <div class="vchip" data-v="casual" onclick="setVoice(this)">Casual</div>
+          <div class="vchip" data-v="executive" onclick="setVoice(this)">Executive</div>
+          <div class="vchip" data-v="creative" onclick="setVoice(this)">Creative</div>
+        </div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-label">Passes per Node</div>
+        <div class="passes-row">
+          <button class="passes-btn" onclick="adjPasses(-1)">−</button>
+          <input class="passes-num" id="passesNum" type="number" min="1" max="10" value="1" oninput="updatePassesDesc()">
+          <button class="passes-btn" onclick="adjPasses(1)">+</button>
+        </div>
+        <div class="passes-desc" id="passesDesc">1 pass — single run per node, fastest.</div>
+      </div>
+
+      <div class="config-card">
+        <div class="config-label">Multi-Model Consensus</div>
+        <div class="toggle-row">
+          <div class="toggle" id="consensusToggle" onclick="this.classList.toggle('on');updateConsensusDesc()"></div>
+          <div class="toggle-label" id="consensusDesc">Off — one model per node. Fastest.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="run-btn" id="runBtn" onclick="startPipeline()">Run Pipeline →</button>
+  </div>
+
+  <!-- RUNNER (shown during/after pipeline) -->
+  <div class="runner" id="runner">
+    <div class="flow-bar">
+      <div class="fchip" id="fc0">0 · Research</div>
+      <div class="farr">→</div>
+      <div class="fchip" id="fc1">1 · Fact Check</div>
+      <div class="farr">→</div>
+      <div class="fchip" id="fc2">2 · Editor</div>
+    </div>
+    <div id="nodesList"></div>
+    <div id="finalCard" style="display:none" class="final-card">
+      <div class="final-head">
+        <span>✓</span>
+        <div class="final-title">Final output — verified &amp; polished</div>
+        <div class="final-actions">
+          <button class="fac-btn" onclick="copyFinal()">Copy</button>
+          <button class="fac-btn" id="pdfBtn" onclick="exportPDF()" style="display:none">PDF</button>
+          <button class="fac-btn" onclick="resetPipeline()">New</button>
+        </div>
+      </div>
+      <div class="final-body"><div id="finalText"></div></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════ MODELS TAB ══════ -->
+<div class="tab-panel" id="tab-models">
+<div class="models-layout">
+  <div>
+    <div class="settings-title" style="font-family:var(--fd);font-size:20px;letter-spacing:-.02em;margin-bottom:4px">Model Library</div>
+    <div class="settings-desc">Select which models to use. More models = higher consensus accuracy but slower per run.</div>
+  </div>
+  <div class="bundle-bar" id="bundleBar">
+    <button class="bbtn act" data-b="quality" onclick="applyBundle(this)">⭐ Quality</button>
+    <button class="bbtn" data-b="speed" onclick="applyBundle(this)">⚡ Speed</button>
+    <button class="bbtn" data-b="reasoning" onclick="applyBundle(this)">🧠 Reasoning</button>
+    <button class="bbtn" data-b="allgroq" onclick="applyBundle(this)">🔥 All Groq</button>
+    <button class="bbtn" data-b="custom" onclick="applyBundle(this)">✦ Custom</button>
+  </div>
+  <div class="model-list" id="modelList"></div>
+  <div class="model-summary-bar" id="modelSummaryBar"></div>
+</div>
+</div>
+
+<!-- ══════ SETTINGS TAB ══════ -->
+<div class="tab-panel" id="tab-settings">
+<div class="settings-layout">
+
+  <div class="settings-section">
+    <div class="settings-title">API Keys</div>
+    <div class="settings-desc">Keys are saved to your browser and auto-load on every visit. Never sent anywhere except the AI providers directly.</div>
+
+    <div class="supabase-banner" id="sbBanner">
+      <strong>Enable cloud sync</strong> — saves keys &amp; settings across all your devices.<br>
+      <strong>Setup (5 min, free):</strong><br>
+      1. Go to <a href="https://supabase.com" target="_blank">supabase.com</a> → New project (free tier)<br>
+      2. In your project: <strong>SQL Editor</strong> → run this: <code style="font-family:var(--fm);font-size:11px;background:rgba(0,0,0,.3);padding:2px 5px;border-radius:3px">CREATE TABLE spert_config (id text PRIMARY KEY, data jsonb);</code><br>
+      3. Go to <strong>Project Settings → API</strong> → copy your Project URL and anon key below.
+      <div class="sb-inputs" style="margin-top:10px">
+        <input class="sb-input" id="sbUrl" placeholder="Supabase Project URL (https://xxx.supabase.co)" oninput="saveSbLocally()">
+        <input class="sb-input" id="sbKey" placeholder="Supabase anon key" type="password" oninput="saveSbLocally()">
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-sm btn-primary" onclick="testSupabase()">Test Connection</button>
+          <div class="sb-status" id="sbStatus"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-card">
+      <div class="key-row2">
+        <div class="key-label">Google Gemini <span class="key-badge2 kb-best">Best · Web Search</span> <span class="key-badge2 kb-fast">1,500/day</span></div>
+        <input class="key-input" id="kGemini" type="password" placeholder="AIza..." autocomplete="off" spellcheck="false">
+        <div class="key-hint">Free at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> — only provider with live web search</div>
+      </div>
+      <div class="key-row2">
+        <div class="key-label">Groq <span class="key-badge2 kb-fast">Fastest · 1,000/model/day</span></div>
+        <input class="key-input" id="kGroq" type="password" placeholder="gsk_..." autocomplete="off" spellcheck="false">
+        <div class="key-hint">Free at <a href="https://console.groq.com" target="_blank">console.groq.com</a> — 300+ tok/sec, each model has its own daily limit</div>
+      </div>
+      <div class="key-row2">
+        <div class="key-label">Mistral <span class="key-badge2 kb-eu">European · 1B tok/month</span></div>
+        <input class="key-input" id="kMistral" type="password" placeholder="..." autocomplete="off" spellcheck="false">
+        <div class="key-hint">Free at <a href="https://console.mistral.ai" target="_blank">console.mistral.ai</a></div>
+      </div>
+      <div class="key-row2">
+        <div class="key-label">OpenRouter <span class="key-badge2 kb-more">30+ free models</span></div>
+        <input class="key-input" id="kOpenRouter" type="password" placeholder="sk-or-..." autocomplete="off" spellcheck="false">
+        <div class="key-hint">Free at <a href="https://openrouter.ai" target="_blank">openrouter.ai</a> — DeepSeek R1, Llama 4, Qwen3 &amp; more</div>
+      </div>
+      <button class="save-keys-btn" onclick="saveKeys()">Save Keys</button>
+      <div class="save-msg" id="saveMsg">✓ Keys saved</div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">Auto-Deploy via GitHub</div>
+    <div class="settings-desc">Connect to GitHub so the Upgrade Studio pushes changes directly. Netlify watches your repo and redeploys in ~30 seconds — no manual uploading ever.</div>
+    <div class="supabase-banner" style="border-color:var(--purplebord);background:var(--purplebg)">
+      <strong style="color:var(--purple)">One-time setup (8 min, free):</strong><br>
+      <strong>1. Create a GitHub repo</strong> — go to <a href="https://github.com/new" target="_blank" style="color:var(--purple)">github.com/new</a>, name it <code style="font-family:var(--fm);font-size:11px;background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">spert-pipeline</code>, set Public, click Create.<br>
+      <strong>2. Upload your file</strong> — in your new repo click <em>Add file &rarr; Upload files</em>, upload <code style="font-family:var(--fm);font-size:11px;background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">spert-pipeline.html</code>, commit.<br>
+      <strong>3. Connect Netlify to GitHub</strong> — go to <a href="https://app.netlify.com" target="_blank" style="color:var(--purple)">app.netlify.com</a> &rarr; Add new site &rarr; Import from Git &rarr; GitHub &rarr; pick your repo. Publish directory: <code style="font-family:var(--fm);font-size:11px;background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px">/</code>, build command: empty. Deploy.<br>
+      <strong>4. Create a GitHub token</strong> — go to <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--purple)">github.com/settings/tokens/new</a> &rarr; Note: "Spert Deploy" &rarr; Expiration: No expiration &rarr; check <strong>repo</strong> scope &rarr; Generate &rarr; copy it.<br>
+      <strong>5. Paste below and Save Keys.</strong> Every future upgrade auto-deploys in ~30 sec.
+      <div class="sb-inputs" style="margin-top:12px">
+        <input class="sb-input" id="ghToken" type="password" placeholder="GitHub Personal Access Token (ghp_...)" style="border-color:var(--purplebord)" oninput="saveGhLocally()">
+        <input class="sb-input" id="ghRepo" type="text" placeholder="username/repo-name  e.g.  john/spert-pipeline" style="border-color:var(--purplebord)" oninput="saveGhLocally()">
+        <input class="sb-input" id="ghFile" type="text" placeholder="File path in repo  (default: spert-pipeline.html)" style="border-color:var(--purplebord)" oninput="saveGhLocally()">
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <button class="btn-sm" style="background:var(--purple);color:#fff;border:none;padding:7px 14px;border-radius:var(--r);cursor:pointer;font-family:var(--ff);font-weight:600" onclick="testGitHub()">Test Connection</button>
+          <div class="sb-status" id="ghStatus"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-title">Custom AI Modes</div>
+    <div class="settings-desc">Create named modes with your preferred settings. They appear in the Mode dropdown on the Pipeline tab.</div>
+    <div class="modes-list" id="modesList"></div>
+    <div class="add-mode-form">
+      <div style="font-size:13px;font-weight:600;color:var(--fg2)">Create new mode</div>
+      <input class="form-input" id="newModeName" placeholder="Mode name (e.g. Deep Research)">
+      <input class="form-input" id="newModeDesc" placeholder="Description">
+      <div class="add-mode-row">
+        <select class="form-select" id="newModeVoice">
+          <option value="neutral">Neutral voice</option>
+          <option value="academic">Academic voice</option>
+          <option value="journalist">Journalist voice</option>
+          <option value="casual">Casual voice</option>
+          <option value="executive">Executive voice</option>
+          <option value="creative">Creative voice</option>
+        </select>
+        <select class="form-select" id="newModePasses">
+          <option value="1">1 pass (fastest)</option>
+          <option value="2">2 passes</option>
+          <option value="3">3 passes (best quality)</option>
+          <option value="5">5 passes (max)</option>
+        </select>
+      </div>
+      <button class="btn-add" onclick="addCustomMode()">Add Mode</button>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ══════ UPGRADE TAB ══════ -->
+<div class="tab-panel" id="tab-upgrade">
+<div class="upgrade-layout">
+  <div>
+    <div class="settings-title" style="font-family:var(--fd);font-size:20px;letter-spacing:-.02em;margin-bottom:4px">Upgrade Studio</div>
+    <div class="settings-desc">Describe a feature you want added. The AI writes the code and <strong style="color:var(--green)">auto-deploys it to your live site via GitHub</strong> — no uploading needed. Falls back to download if GitHub is not connected.</div>
+  </div>
+  <div class="upgrade-history" id="upgradeHistory">
+    <div class="upgrade-msg ai">
+      <strong>Spert Upgrade Studio</strong><br>
+      Tell me what you want to add or change. Examples:<br>
+      · "Add a dark/light theme toggle"<br>
+      · "Add a word count target input"<br>
+      · "Add a history tab that saves past runs"<br>
+      · "Make the final output editable before exporting"<br><br>
+      If you've connected GitHub in Settings, changes deploy automatically in ~30 seconds. Otherwise I'll download the updated file.
+    </div>
+  </div>
+  <div class="dl-banner" id="dlBanner"></div>
+  <div class="upgrade-input-row">
+    <textarea class="upgrade-input" id="upgradeInput" placeholder="Describe the feature you want…" rows="1" oninput="autoResize(this)"></textarea>
+    <button class="upgrade-send" id="upgradeSend" onclick="sendUpgrade()">Send</button>
+  </div>
+</div>
+</div>
+
+</div><!-- end #app -->
+
+<script>
+'use strict';
+/* ════════════════════════════════════════
+   MODEL CATALOG
+════════════════════════════════════════ */
+const ALL_MODELS = [
+  {id:'gem-f2',   prov:'gemini',     mid:'gemini-2.0-flash',                            name:'Gemini 2.0 Flash',     meta:'Google · Fast · Web search',         tags:['speed','search'], q:8,s:9},
+  {id:'gem-f25',  prov:'gemini',     mid:'gemini-2.5-flash',              name:'Gemini 2.5 Flash',     meta:'Google · High quality · Web search',  tags:['quality','search'],q:9,s:7},
+  {id:'gq-l70',   prov:'groq',       mid:'llama-3.3-70b-versatile',                     name:'Llama 3.3 70B',        meta:'Groq · 315 tok/s · 128K',            tags:['speed','quality'],q:8,s:10},
+  {id:'gq-l4s',   prov:'groq',       mid:'meta-llama/llama-4-scout-17b-16e-instruct',   name:'Llama 4 Scout',        meta:'Groq · Multimodal · 128K',            tags:['speed'],          q:7,s:10},
+  {id:'gq-gpt',   prov:'groq',       mid:'openai/gpt-oss-120b',                         name:'GPT-OSS 120B',         meta:'Groq · 120B params · Top reasoning',  tags:['quality','reason'],q:9,s:8},
+  {id:'gq-qwq',   prov:'groq',       mid:'qwen-qwq-32b',                                name:'Qwen QwQ 32B',         meta:'Groq · Strong reasoning · 128K',      tags:['reason'],         q:8,s:8},
+  {id:'gq-ds',    prov:'groq',       mid:'deepseek-r1-distill-llama-70b',               name:'DeepSeek R1 (Groq)',   meta:'Groq · Reasoning · Fast',             tags:['reason','speed'], q:8,s:9},
+  {id:'gq-ms',    prov:'groq',       mid:'mistral-saba-24b',                            name:'Mistral Saba 24B',     meta:'Groq · Mistral on LPU · Very fast',   tags:['speed'],          q:7,s:10},
+  {id:'mis-lg',   prov:'mistral',    mid:'mistral-large-latest',                        name:'Mistral Large',        meta:'Mistral · Flagship · 1B tok/mo',      tags:['quality'],        q:8,s:6},
+  {id:'mis-sm',   prov:'mistral',    mid:'mistral-small-latest',                        name:'Mistral Small',        meta:'Mistral · Efficient · 1B tok/mo',     tags:['speed'],          q:7,s:8},
+  {id:'or-r1',    prov:'openrouter', mid:'deepseek/deepseek-r1:free',                   name:'DeepSeek R1',          meta:'OpenRouter · Top reasoning · Free',   tags:['reason','quality'],q:9,s:5},
+  {id:'or-v3',    prov:'openrouter', mid:'deepseek/deepseek-v3:free',                   name:'DeepSeek V3',          meta:'OpenRouter · Frontier · Free',        tags:['quality'],        q:9,s:5},
+  {id:'or-l4m',   prov:'openrouter', mid:'meta-llama/llama-4-maverick:free',            name:'Llama 4 Maverick',     meta:'OpenRouter · Meta flagship · Free',   tags:['quality'],        q:8,s:5},
+  {id:'or-q235',  prov:'openrouter', mid:'qwen/qwen3-235b-a22b:free',                   name:'Qwen3 235B',           meta:'OpenRouter · Huge MoE · Free',        tags:['quality','reason'],q:9,s:4},
+  {id:'or-gmma',  prov:'openrouter', mid:'google/gemma-4-27b-it:free',                  name:'Gemma 4 27B',          meta:'OpenRouter · Google open · Free',     tags:['quality'],        q:7,s:5},
+];
+
+const BUNDLES = {
+  quality:   ['gem-f25','gq-gpt','or-v3','mis-lg'],
+  speed:     ['gem-f2','gq-l70','gq-l4s','gq-ms'],
+  reasoning: ['gq-ds','gq-qwq','or-r1','or-q235'],
+  allgroq:   ['gq-l70','gq-l4s','gq-gpt','gq-qwq','gq-ds','gq-ms'],
+  custom:    []
+};
+
+const VOICES = {
+  neutral:    'Write in a clear, balanced, professional tone. Be objective and direct.',
+  academic:   'Write in a formal academic tone. Use precise language, evidence-based reasoning, and logical structure.',
+  journalist: 'Write in a sharp journalistic style. Lead with the most important information. Active voice. Punchy sentences.',
+  casual:     'Write in a friendly, conversational tone — like explaining to a smart friend. Plain language, approachable.',
+  executive:  'Write in a concise executive style. Get to the point immediately. Short sentences. Clarity above all.',
+  creative:   'Write in a vivid, engaging style. Evocative and precise language. Make the prose memorable without sacrificing accuracy.'
+};
+
+const BUILTIN_MODES = [
+  {id:'standard',   name:'Standard',      desc:'Balanced research + full fact-check',   voice:'neutral',    passes:1, consensus:false},
+  {id:'deep',       name:'Deep Research', desc:'Thorough multi-pass with consensus',    voice:'academic',   passes:3, consensus:true},
+  {id:'quick',      name:'Quick Draft',   desc:'Single pass, fast turnaround',          voice:'journalist', passes:1, consensus:false},
+  {id:'factonly',   name:'Fact Check',    desc:'Skip editor, focus on verification',    voice:'neutral',    passes:2, consensus:false},
+  {id:'executive',  name:'Executive',     desc:'Tight, actionable, decision-ready',     voice:'executive',  passes:1, consensus:false},
+];
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let selectedModels = new Set(['gem-f25','gq-gpt','or-v3','mis-lg']);
+let selectedVoice = 'neutral';
+let passes = 1;
+let consensusOn = false;
+let webSearchOn = true;
+let pdfOutOn = false;
+let attachedFiles = [];
+let running = false;
+let timerIv = null;
+let customModes = [];
+let intentContext = '';
+let clarifyResolve = null;
+let currentBundle = 'quality';
+
+/* ════════════════════════════════════════
+   SUPABASE
+════════════════════════════════════════ */
+let sbUrl = '', sbKey = '';
+
+async function sbGet(id) {
+  if (!sbUrl || !sbKey) return null;
+  try {
+    const r = await fetch(`${sbUrl}/rest/v1/spert_config?id=eq.${id}&select=data`, {
+      headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey}
+    });
+    const d = await r.json();
+    return d?.[0]?.data || null;
+  } catch { return null; }
+}
+
+async function sbSet(id, data) {
+  if (!sbUrl || !sbKey) return;
+  try {
+    await fetch(`${sbUrl}/rest/v1/spert_config`, {
+      method:'POST',
+      headers:{'apikey':sbKey,'Authorization':'Bearer '+sbKey,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body: JSON.stringify({id, data})
+    });
+  } catch {}
+}
+
+function saveSbLocally() {
+  sbUrl = document.getElementById('sbUrl').value.trim();
+  sbKey = document.getElementById('sbKey').value.trim();
+  localStorage.setItem('spert_sbUrl', sbUrl);
+  localStorage.setItem('spert_sbKey', sbKey);
+}
+
+async function testSupabase() {
+  sbUrl = document.getElementById('sbUrl').value.trim();
+  sbKey = document.getElementById('sbKey').value.trim();
+  const el = document.getElementById('sbStatus');
+  el.textContent = 'Testing…'; el.style.color = 'var(--fg3)';
+  try {
+    await sbSet('test_ping', {ok:true, ts:Date.now()});
+    el.textContent = '✓ Connected!'; el.style.color = 'var(--green)';
+    saveSbLocally();
+    await syncToCloud();
+  } catch(e) {
+    el.textContent = '✗ Failed: '+e.message; el.style.color = 'var(--red)';
+  }
+}
+
+async function syncToCloud() {
+  if (!sbUrl || !sbKey) return;
+  const keys = {g:document.getElementById('kGemini').value.trim(), gr:document.getElementById('kGroq').value.trim(), m:document.getElementById('kMistral').value.trim(), o:document.getElementById('kOpenRouter').value.trim()};
+  await sbSet('user_config', {keys, customModes, selectedModels:[...selectedModels], selectedVoice, passes, consensusOn});
+}
+
+async function loadFromCloud() {
+  const d = await sbGet('user_config');
+  if (!d) return;
+  if (d.keys) {
+    if (d.keys.g) { document.getElementById('kGemini').value = d.keys.g; }
+    if (d.keys.gr) { document.getElementById('kGroq').value = d.keys.gr; }
+    if (d.keys.m) { document.getElementById('kMistral').value = d.keys.m; }
+    if (d.keys.o) { document.getElementById('kOpenRouter').value = d.keys.o; }
+  }
+  if (d.customModes) { customModes = d.customModes; renderCustomModes(); populateModeSelect(); }
+  if (d.selectedModels) { selectedModels = new Set(d.selectedModels); refreshModelList(); }
+  if (d.selectedVoice) { selectedVoice = d.selectedVoice; document.querySelectorAll('.vchip').forEach(c=>c.classList.toggle('sel',c.dataset.v===selectedVoice)); }
+  if (d.passes) { passes = d.passes; document.getElementById('passesNum').value = passes; updatePassesDesc(); }
+  if (typeof d.consensusOn === 'boolean') { consensusOn = d.consensusOn; if(consensusOn)document.getElementById('consensusToggle').classList.add('on'); updateConsensusDesc(); }
+  document.getElementById('statusDot').classList.add('on');
+}
+
+/* ════════════════════════════════════════
+   PERSISTENCE — localStorage fallback
+════════════════════════════════════════ */
+function saveKeys() {
+  localStorage.setItem('spert_g', document.getElementById('kGemini').value);
+  localStorage.setItem('spert_gr', document.getElementById('kGroq').value);
+  localStorage.setItem('spert_m', document.getElementById('kMistral').value);
+  localStorage.setItem('spert_o', document.getElementById('kOpenRouter').value);
+  const msg = document.getElementById('saveMsg');
+  msg.style.display = 'block';
+  setTimeout(()=>msg.style.display='none', 2000);
+  syncToCloud();
+}
+
+function loadKeys() {
+  const g = localStorage.getItem('spert_g')||'';
+  const gr = localStorage.getItem('spert_gr')||'';
+  const m = localStorage.getItem('spert_m')||'';
+  const o = localStorage.getItem('spert_o')||'';
+  document.getElementById('kGemini').value = g;
+  document.getElementById('kGroq').value = gr;
+  document.getElementById('kMistral').value = m;
+  document.getElementById('kOpenRouter').value = o;
+  sbUrl = localStorage.getItem('spert_sbUrl')||'';
+  sbKey = localStorage.getItem('spert_sbKey')||'';
+  if (sbUrl) document.getElementById('sbUrl').value = sbUrl;
+  if (sbKey) document.getElementById('sbKey').value = sbKey;
+  if (sbUrl && sbKey) loadFromCloud();
+}
+
+function getKeys() {
+  return {
+    gemini: document.getElementById('kGemini').value.trim(),
+    groq:   document.getElementById('kGroq').value.trim(),
+    mistral:document.getElementById('kMistral').value.trim(),
+    openrouter: document.getElementById('kOpenRouter').value.trim()
+  };
+}
+
+/* ════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════ */
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event?.target.classList.add('active');
+}
+
+/* ════════════════════════════════════════
+   MODE SELECT
+════════════════════════════════════════ */
+function populateModeSelect() {
+  const sel = document.getElementById('modeSelect');
+  sel.innerHTML = '';
+  [...BUILTIN_MODES, ...customModes].forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.id; o.textContent = m.name + (m.desc ? ' — '+m.desc : '');
+    sel.appendChild(o);
+  });
+}
+
+function onModeChange() {
+  const id = document.getElementById('modeSelect').value;
+  const mode = [...BUILTIN_MODES, ...customModes].find(m=>m.id===id);
+  if (!mode) return;
+  selectedVoice = mode.voice;
+  passes = mode.passes;
+  consensusOn = mode.consensus || false;
+  document.getElementById('passesNum').value = passes;
+  updatePassesDesc();
+  document.querySelectorAll('.vchip').forEach(c=>c.classList.toggle('sel',c.dataset.v===selectedVoice));
+  document.getElementById('consensusToggle').classList.toggle('on', consensusOn);
+  updateConsensusDesc();
+}
+
+function addCustomMode() {
+  const name = document.getElementById('newModeName').value.trim();
+  if (!name) return;
+  const mode = {
+    id: 'custom_'+Date.now(),
+    name,
+    desc: document.getElementById('newModeDesc').value.trim(),
+    voice: document.getElementById('newModeVoice').value,
+    passes: parseInt(document.getElementById('newModePasses').value),
+    consensus: false,
+    models: [...selectedModels]
+  };
+  customModes.push(mode);
+  document.getElementById('newModeName').value='';
+  document.getElementById('newModeDesc').value='';
+  renderCustomModes();
+  populateModeSelect();
+  localStorage.setItem('spert_modes', JSON.stringify(customModes));
+  syncToCloud();
+}
+
+function deleteCustomMode(id) {
+  customModes = customModes.filter(m=>m.id!==id);
+  renderCustomModes(); populateModeSelect();
+  localStorage.setItem('spert_modes', JSON.stringify(customModes));
+  syncToCloud();
+}
+
+function renderCustomModes() {
+  const list = document.getElementById('modesList');
+  list.innerHTML = '';
+  customModes.forEach(m => {
+    const d = document.createElement('div');
+    d.className = 'mode-item';
+    d.innerHTML = `<div><div class="mode-item-name">${esc(m.name)}</div><div class="mode-item-desc">${esc(m.desc||'')} · ${m.voice} · ${m.passes} pass${m.passes>1?'es':''}</div></div>
+      <div class="mode-item-actions"><button class="mode-act-btn del" onclick="deleteCustomMode('${m.id}')">Delete</button></div>`;
+    list.appendChild(d);
+  });
+}
+
+/* ════════════════════════════════════════
+   MODEL LIST
+════════════════════════════════════════ */
+function initModelList() {
+  const list = document.getElementById('modelList');
+  list.innerHTML = '';
+  ALL_MODELS.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'mrow'+(selectedModels.has(m.id)?' sel':'');
+    row.id = 'mr-'+m.id;
+    row.onclick = ()=>toggleModel(m.id);
+    const tagMap = {speed:'mt-s Fast',quality:'mt-q Quality',reason:'mt-r Reasoning',search:'mt-w 🔍 Search'};
+    const tags = m.tags.map(t=>tagMap[t]?`<span class="mtag ${tagMap[t].split(' ')[0]}">${tagMap[t].split(' ').slice(1).join(' ')}</span>`:'').join('');
+    row.innerHTML = `<div class="mchk" id="mchk-${m.id}">${selectedModels.has(m.id)?'✓':''}</div>
+      <div class="minfo"><div class="mname">${m.name}</div><div class="mmeta">${m.meta}</div></div>
+      <div class="mtags">${tags}</div>`;
+    list.appendChild(row);
+  });
+  updateModelSummary();
+}
+
+function refreshModelList() {
+  ALL_MODELS.forEach(m => {
+    const row = document.getElementById('mr-'+m.id);
+    const chk = document.getElementById('mchk-'+m.id);
+    if (!row||!chk) return;
+    const sel = selectedModels.has(m.id);
+    row.classList.toggle('sel', sel);
+    chk.textContent = sel ? '✓' : '';
+  });
+  updateModelSummary();
+}
+
+function toggleModel(id) {
+  if (selectedModels.has(id)) {
+    if (selectedModels.size <= 1) return;
+    selectedModels.delete(id);
+  } else { selectedModels.add(id); }
+  refreshModelList();
+  currentBundle = 'custom';
+  document.querySelectorAll('.bbtn').forEach(b=>b.classList.toggle('act', b.dataset.b==='custom'));
+}
+
+function applyBundle(el) {
+  document.querySelectorAll('.bbtn').forEach(b=>b.classList.remove('act'));
+  el.classList.add('act');
+  currentBundle = el.dataset.b;
+  if (currentBundle !== 'custom') {
+    selectedModels = new Set(BUNDLES[currentBundle]);
+    refreshModelList();
+  }
+}
+
+function updateModelSummary() {
+  const sel = ALL_MODELS.filter(m=>selectedModels.has(m.id));
+  const keys = getKeys();
+  const hasSearch = sel.some(m=>m.tags.includes('search') && keys.gemini);
+  const missing = sel.filter(m=>!keys[m.prov]).map(m=>m.name);
+  let html = `<strong>${sel.length} models selected</strong> — ${sel.map(m=>`<span style="color:var(--fg2)">${m.name}</span>`).join(', ')}`;
+  html += hasSearch ? ' · <span style="color:var(--teal)">🔍 Web search active</span>' : ' · <span style="color:var(--amber)">No web search (needs Gemini key)</span>';
+  if (missing.length) html += `<br><span style="color:var(--amber)">⚠ Missing keys for: ${missing.join(', ')} — add in Settings</span>`;
+  document.getElementById('modelSummaryBar').innerHTML = html;
+}
+
+/* ════════════════════════════════════════
+   VOICE & PASSES
+════════════════════════════════════════ */
+function setVoice(el) {
+  document.querySelectorAll('.vchip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedVoice = el.dataset.v;
+}
+
+function adjPasses(d) {
+  passes = Math.max(1, Math.min(10, (parseInt(document.getElementById('passesNum').value)||1)+d));
+  document.getElementById('passesNum').value = passes;
+  updatePassesDesc();
+}
+
+function updatePassesDesc() {
+  passes = Math.max(1, Math.min(10, parseInt(document.getElementById('passesNum').value)||1));
+  const descs = {1:'1 pass — single run, fastest.', 2:'2 passes — second pass refines the first.', 3:'3 passes — high quality, each pass improves accuracy.'};
+  const est = passes === 1 ? '' : ` Est. ${passes}× longer than a single pass.`;
+  document.getElementById('passesDesc').textContent = (descs[passes]||`${passes} passes — maximum quality.`) + est;
+}
+
+function updateConsensusDesc() {
+  consensusOn = document.getElementById('consensusToggle').classList.contains('on');
+  const sel = ALL_MODELS.filter(m=>selectedModels.has(m.id));
+  document.getElementById('consensusDesc').textContent = consensusOn
+    ? `On — runs ${Math.min(3,sel.length)} models in parallel, merges answers by majority. ${Math.min(3,sel.length)}× slower, significantly more accurate.`
+    : 'Off — one model per node. Fastest.';
+}
+
+function toggleWebSearch() {
+  webSearchOn = !webSearchOn;
+  document.getElementById('webSearchBtn').classList.toggle('active', webSearchOn);
+}
+
+function togglePdfOut() {
+  pdfOutOn = !pdfOutOn;
+  document.getElementById('pdfOutBtn').classList.toggle('active', pdfOutOn);
+}
+
+/* ════════════════════════════════════════
+   FILE HANDLING
+════════════════════════════════════════ */
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    attachedFiles.push(f);
+    const chip = document.createElement('div');
+    chip.className = 'file-chip';
+    chip.id = 'fc-'+f.name.replace(/\W/g,'_');
+    chip.innerHTML = `${f.type.startsWith('image/')?'🖼':'📄'} ${esc(f.name)} <span class="rm" onclick="removeFile('${f.name.replace(/'/g,"\\'")}', this)">×</span>`;
+    document.getElementById('fileList').appendChild(chip);
+  });
+}
+
+function removeFile(name, el) {
+  attachedFiles = attachedFiles.filter(f=>f.name!==name);
+  el.closest('.file-chip').remove();
+}
+
+async function readFileAsBase64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function readFileAsText(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsText(file);
+  });
+}
+
+/* ════════════════════════════════════════
+   INTENT DETECTION
+════════════════════════════════════════ */
+async function detectIntent() {
+  const text = document.getElementById('mainInput').value.trim();
+  if (text.length < 20) return;
+  const keys = getKeys();
+  const key = keys.gemini || keys.groq;
+  if (!key) return;
+
+  try {
+    const result = await quickCall(key, keys.gemini ? 'gemini' : 'groq',
+      `You are an intent classifier for an AI research pipeline. Given user input, output a JSON object ONLY (no markdown) with these fields:
+      - intent: one of "research", "factcheck", "write", "summarize", "analyze", "qa", "other"
+      - outputType: one of "article", "report", "answer", "summary", "essay", "other"
+      - needsClarification: boolean
+      - clarifyQuestion: if needsClarification true, a single short clarifying question to ask the user
+      - summary: one sentence describing what the user wants
+      Output ONLY valid JSON.`,
+      `User input: "${text.substring(0,400)}"`
+    );
+    const parsed = JSON.parse(result.replace(/```json|```/g,'').trim());
+    const banner = document.getElementById('intentBanner');
+    banner.style.display = 'block';
+    banner.innerHTML = `<strong>Intent detected:</strong> ${parsed.summary || parsed.intent}`;
+
+    if (parsed.needsClarification && parsed.clarifyQuestion) {
+      document.getElementById('clarifyQ').textContent = parsed.clarifyQuestion;
+      document.getElementById('clarifyCard').classList.add('show');
+      await new Promise(res => { clarifyResolve = res; });
+    }
+  } catch(e) {}
+}
+
+async function quickCall(key, prov, system, user) {
+  if (prov === 'gemini') {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const res = await fetch(url, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      system_instruction:{parts:[{text:system}]},
+      contents:[{role:'user',parts:[{text:user}]}],
+      generationConfig:{maxOutputTokens:300,temperature:0}
+    })});
+    const d = await res.json();
+    return d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+  }
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:300,temperature:0,messages:[{role:'system',content:system},{role:'user',content:user}]})
+  });
+  const d = await res.json();
+  return d.choices?.[0]?.message?.content||'';
+}
+
+function answerClarify() {
+  const ans = document.getElementById('clarifyInput').value.trim();
+  if (ans) intentContext = ' Additional context from user: '+ans;
+  document.getElementById('clarifyCard').classList.remove('show');
+  if (clarifyResolve) { clarifyResolve(); clarifyResolve=null; }
+}
+
+function skipClarify() {
+  document.getElementById('clarifyCard').classList.remove('show');
+  if (clarifyResolve) { clarifyResolve(); clarifyResolve=null; }
+}
+
+function onInputChange() {
+  const n = document.getElementById('mainInput').value.length;
+  document.getElementById('charCount').textContent = n.toLocaleString();
+}
+
+/* ════════════════════════════════════════
+   PIPELINE API CALLS
+════════════════════════════════════════ */
+async function callModel(model, systemPrompt, userContent, useSearch, maxTokens) {
+  const keys = getKeys();
+  const key = keys[model.prov];
+  if (!key) throw new Error('No key for '+model.prov);
+
+  if (model.prov === 'gemini') {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model.mid}:generateContent?key=${encodeURIComponent(key)}`;
+    const body = {
+      system_instruction:{parts:[{text:systemPrompt}]},
+      contents:[{role:'user',parts:[{text:userContent}]}],
+      generationConfig:{maxOutputTokens:maxTokens,temperature:0.2}
+    };
+    if (useSearch && model.tags.includes('search') && webSearchOn) body.tools=[{google_search:{}}];
+    const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d = await res.json();
+    if (d.error) throw new Error('Gemini: '+d.error.message);
+    const c = d.candidates?.[0];
+    return {text:c?.content?.parts?.map(p=>p.text||'').join('')||'', provider:model.name, searchUsed:useSearch&&model.tags.includes('search')&&webSearchOn};
+  }
+  if (model.prov === 'groq') {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:model.mid,max_tokens:Math.min(maxTokens,8000),temperature:0.2,
+        messages:[{role:'system',content:systemPrompt},{role:'user',content:userContent}]})
+    });
+    const d = await res.json();
+    if (d.error) throw new Error('Groq: '+d.error.message);
+    return {text:d.choices?.[0]?.message?.content||'',provider:model.name,searchUsed:false};
+  }
+  if (model.prov === 'mistral') {
+    const res = await fetch('https://api.mistral.ai/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model:model.mid,max_tokens:maxTokens,temperature:0.2,
+        messages:[{role:'system',content:systemPrompt},{role:'user',content:userContent}]})
+    });
+    const d = await res.json();
+    if (d.error) throw new Error('Mistral: '+d.error.message);
+    return {text:d.choices?.[0]?.message?.content||'',provider:model.name,searchUsed:false};
+  }
+  if (model.prov === 'openrouter') {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+key,'HTTP-Referer':'https://spert-pipeline.app','X-Title':'Spert'},
+      body:JSON.stringify({model:model.mid,max_tokens:maxTokens,temperature:0.2,
+        messages:[{role:'system',content:systemPrompt},{role:'user',content:userContent}]})
+    });
+    const d = await res.json();
+    if (d.error) throw new Error('OR: '+d.error.message);
+    return {text:d.choices?.[0]?.message?.content||'',provider:model.name,searchUsed:false};
+  }
+  throw new Error('Unknown provider');
+}
+
+async function runNodeWithConsensus(systemPrompt, userContent, useSearch, maxTokens, nodeIdx) {
+  const keys = getKeys();
+  const available = ALL_MODELS.filter(m => selectedModels.has(m.id) && keys[m.prov]);
+  if (!available.length) throw new Error('No models available. Add API keys in Settings.');
+
+  if (!consensusOn || available.length < 2) {
+    // Single model with fallback
+    let lastErr;
+    const ordered = useSearch
+      ? [...available.filter(m=>m.tags.includes('search')), ...available.filter(m=>!m.tags.includes('search'))]
+      : available;
+    for (const m of ordered) {
+      try { return await callModel(m, systemPrompt, userContent, useSearch, maxTokens); }
+      catch(e) { lastErr=e; }
+    }
+    throw lastErr;
+  }
+
+  // CONSENSUS: run up to 3 models in parallel
+  const pool = useSearch
+    ? [...available.filter(m=>m.tags.includes('search')), ...available.filter(m=>!m.tags.includes('search'))]
+    : [...available];
+  const group = pool.slice(0, Math.min(3, pool.length));
+
+  setBody(nodeIdx, `<div class="wmsg"><span class="spin"></span> Running ${group.length} models in parallel for consensus… <span class="tmr" id="t${nodeIdx}"></span></div>`);
+  startTimer('t'+nodeIdx);
+
+  const results = await Promise.allSettled(group.map(m => callModel(m, systemPrompt, userContent, useSearch, maxTokens)));
+  const successes = results.filter(r=>r.status==='fulfilled').map(r=>r.value);
+  if (!successes.length) throw results[0].reason;
+
+  if (successes.length === 1) return successes[0];
+
+  // Merge via a judge model
+  const mergeModel = available.find(m=>m.tags.includes('quality')) || available[0];
+  const mergePrompt = `You are a synthesis judge. You receive ${successes.length} AI responses to the same task. Your job is to produce the BEST single merged response by majority agreement — use points where most AIs agree, and resolve disagreements by choosing the most accurate/supported position. Output ONLY the merged response, no meta-commentary.`;
+  const mergeInput = successes.map((r,i)=>`=== RESPONSE ${i+1} (${r.provider}) ===\n${r.text}`).join('\n\n');
+  try {
+    const merged = await callModel(mergeModel, mergePrompt, mergeInput, false, maxTokens);
+    merged.provider = `Consensus (${successes.map(r=>r.provider).join(', ')})`;
+    merged.searchUsed = successes.some(r=>r.searchUsed);
+    return merged;
+  } catch {
+    return successes[0]; // fallback to first
+  }
+}
+
+/* ════════════════════════════════════════
+   PROMPTS
+════════════════════════════════════════ */
+function pResearch(voice) {
+  return `You are a Master Research Analyst. Build a dense, factual Research Dossier using web search.
+VOICE: ${VOICES[voice]}
+Search 5–8 times. Prioritize .edu, .gov, arxiv.org, official sources. For current topics search last 1 year first.
+OUTPUT RULES: Bullet points ONLY. Hard data: names, dates, numbers, verified claims. Include source URL per fact.
+Organize as: KEY FACTS | CURRENT STATISTICS | IMPORTANT CONTEXT
+Output ONLY the Research Dossier.`;
+}
+
+function pFactCheck(voice) {
+  return `You are a strict fact-checker. Accuracy is your ONLY priority.
+VOICE: ${VOICES[voice]}
+PROCESS: Go CHRONOLOGICALLY, paragraph by paragraph. Never skip any.
+VERIFY: Every explicit factual claim AND implicit logical assumption.
+IGNORE: Grammar, spelling, style — 100% focus on facts and logic.
+Rules: High-stakes/numeric claims: 2+ independent sources. Consensus facts: 1 source. NEVER fabricate URLs.
+Include verbatim quote (under 15 words) from each source.
+OUTPUT:
+=== SCRATCHPAD === [claims per paragraph → search query → result with URL and quote]
+Then EITHER:
+=== CORRECTION REPORT === [each error: 1.Original 2.Correct+date 3.Quote 4.URL]
+OR:
+=== VERIFICATION SUCCESS ===
+Fact Check Complete: All original claims verified as accurate.`;
+}
+
+function pEditor(voice) {
+  return `You are a Master Editor producing the final polished draft.
+VOICE (apply rigorously): ${VOICES[voice]}
+If VERIFICATION SUCCESS: copy-edit only — fix grammar, phrasing, spelling, enhance flow. Do NOT add new claims.
+If CORRECTION REPORT present: integrate every correction seamlessly, then polish.
+Keep roughly the same length. Maintain original formatting.
+Output ONLY the final polished text.`;
+}
+
+/* ════════════════════════════════════════
+   NODE UI
+════════════════════════════════════════ */
+function buildNodes() {
+  const list = document.getElementById('nodesList');
+  list.innerHTML = '';
+  [{name:'Researcher',desc:'Builds verified research dossier',icon:'🔍'},
+   {name:'Fact Checker',desc:'Cross-verifies every claim',icon:'⚖️'},
+   {name:'Editor',desc:'Integrates corrections & polishes prose',icon:'✦'}
+  ].forEach((n,i) => {
+    const d=document.createElement('div'); d.className='ncard'; d.id='nc'+i;
+    d.innerHTML=`<div class="nhead" onclick="toggleBody(${i})">
+      <div class="nicon" id="ni${i}">${n.icon}</div>
+      <div class="ninfo"><div class="nname">Node ${i} · ${n.name}</div><div class="ndesc">${n.desc}</div></div>
+      <span class="nbadge bi" id="badge${i}">Queued</span>
+      <span class="chev" id="chev${i}">▼</span></div>
+      <div class="nbody" id="nb${i}"><div class="wmsg" style="color:var(--fg4)">Waiting…</div></div>`;
+    list.appendChild(d);
+  });
+}
+
+function toggleBody(i){const b=document.getElementById('nb'+i),c=document.getElementById('chev'+i);b.classList.toggle('open',!b.classList.contains('open'));c.classList.toggle('open',!c.classList.contains('open'))}
+function openBody(i){document.getElementById('nb'+i).classList.add('open');document.getElementById('chev'+i).classList.add('open')}
+function setState(i,st,label){
+  const card=document.getElementById('nc'+i);card.classList.remove('na','nw','ne');if(st!=='done')card.classList.add('n'+st[0]);
+  document.getElementById('ni'+i).className='nicon ni'+st[0];
+  const b=document.getElementById('badge'+i);b.className='nbadge b'+st[0];
+  b.innerHTML=st==='active'?`<span class="spin"></span> ${label}`:label;
+}
+function setChip(i,c){document.getElementById('fc'+i).className='fchip '+(c||'')}
+function setBody(i,html){document.getElementById('nb'+i).innerHTML=html}
+function startTimer(id){clearInterval(timerIv);let s=0;const el=document.getElementById(id);if(!el)return;el.textContent='0s';timerIv=setInterval(()=>{s++;el.textContent=s<60?s+'s':Math.floor(s/60)+'m '+(s%60)+'s'},1000)}
+function stopTimer(){clearInterval(timerIv)}
+
+function renderAudit(text) {
+  const sm=text.match(/(?:===\s*)?SCRATCHPAD(?:\s*===)?[\s\S]*?(?=(?:===\s*)?CORRECTION REPORT|(?:===\s*)?VERIFICATION SUCCESS|$)/i);
+  const cm=text.match(/(?:===\s*)?CORRECTION REPORT(?:\s*===)?[\s\S]*?(?=(?:===\s*)?VERIFICATION SUCCESS|$)/i);
+  const vm=text.match(/(?:===\s*)?VERIFICATION SUCCESS(?:\s*===)?[\s\S]*/i);
+  let h='';
+  if(sm)h+=`<div class="gap10 slbl">Scratchpad</div><div class="mono" style="margin-bottom:10px">${esc(sm[0].replace(/^(?:===\s*)?SCRATCHPAD(?:\s*===)?\s*/i,'').trim())}</div>`;
+  if(cm)h+=`<div class="gap10 slbl">Correction report</div><div class="rbox rf" style="margin-bottom:10px">${esc(cm[0].replace(/^(?:===\s*)?CORRECTION REPORT(?:\s*===)?\s*/i,'').trim())}</div>`;
+  if(vm)h+=`<div class="rbox rp">${esc(vm[0].trim())}</div>`;
+  return h||`<div class="mono">${esc(text)}</div>`;
+}
+
+/* ════════════════════════════════════════
+   MAIN PIPELINE
+════════════════════════════════════════ */
+async function startPipeline() {
+  const rawInput = document.getElementById('mainInput').value.trim();
+  if (!rawInput) { alert('Please enter some text or topic.'); return; }
+  if (running) return;
+
+  const keys = getKeys();
+  if (!Object.values(keys).some(k=>k.length>5)) {
+    alert('Please add at least one API key in the Settings tab.'); showTab('settings'); return;
+  }
+
+  running = true;
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('pipelineForm').style.display = 'none';
+  document.getElementById('runner').classList.add('active');
+  document.getElementById('finalCard').style.display = 'none';
+
+  buildNodes();
+
+  // Build full input including file context
+  let fullInput = rawInput + intentContext;
+  for (const f of attachedFiles) {
+    if (f.type === 'text/plain' || f.name.endsWith('.md')) {
+      fullInput += '\n\n[ATTACHED FILE: '+f.name+']\n' + await readFileAsText(f);
+    } else if (f.type === 'application/pdf') {
+      fullInput += '\n\n[ATTACHED PDF: '+f.name+' — extract and analyze contents]';
+    }
+  }
+
+  const MAX = 5000;
+  const passCount = passes;
+
+  try {
+    /* NODE 0 — RESEARCHER */
+    setChip(0,'fa'); setState(0,'active','Researching…'); openBody(0);
+    setBody(0,`<div class="wmsg"><span class="spin"></span> Searching… <span class="tmr" id="t0"></span></div>`);
+    startTimer('t0');
+
+    let dossier = '';
+    for (let p=0; p<passCount; p++) {
+      const passInput = p===0 ? fullInput : `Original topic: ${fullInput}\n\nPrevious dossier (expand and improve):\n${dossier}`;
+      const r = await runNodeWithConsensus(pResearch(selectedVoice), passInput, true, MAX, 0);
+      dossier = r.text;
+      if (passCount > 1) setBody(0,`<div class="wmsg"><span class="spin"></span> Pass ${p+2}/${passCount}… <span class="tmr" id="t0b"></span></div>`);
+    }
+
+    stopTimer();
+    setChip(0,'fd'); setState(0,'done','Done');
+    setBody(0,`<div class="slbl" style="margin-bottom:8px">Research Dossier</div><div class="mono">${esc(dossier)}</div>`);
+
+    /* NODE 1 — FACT CHECKER */
+    setChip(1,'fa'); setState(1,'active','Fact checking…'); openBody(1);
+    setBody(1,`<div class="wmsg"><span class="spin"></span> Verifying claims… <span class="tmr" id="t1"></span></div>`);
+    startTimer('t1');
+
+    let auditReport = '';
+    for (let p=0; p<passCount; p++) {
+      const factIn = `RESEARCH DOSSIER:\n${dossier}\n\n---\n\nTEXT TO FACT-CHECK:\n${fullInput}`;
+      const r = await runNodeWithConsensus(pFactCheck(selectedVoice), factIn, true, MAX, 1);
+      auditReport = r.text;
+    }
+
+    stopTimer();
+    const hasCR = /CORRECTION REPORT/i.test(auditReport);
+    setChip(1, hasCR?'fw':'fd'); setState(1, hasCR?'warn':'done', hasCR?'Issues found':'Verified ✓');
+    setBody(1, renderAudit(auditReport));
+
+    /* NODE 2 — EDITOR */
+    setChip(2,'fa'); setState(2,'active','Polishing…'); openBody(2);
+    setBody(2,`<div class="wmsg"><span class="spin"></span> Polishing… <span class="tmr" id="t2"></span></div>`);
+    startTimer('t2');
+
+    let finalText = '';
+    for (let p=0; p<passCount; p++) {
+      const edIn = p===0
+        ? `ORIGINAL DRAFT:\n${fullInput}\n\n---\n\nAUDIT REPORT:\n${auditReport}`
+        : `PREVIOUS POLISH (improve further):\n${finalText}\n\n---\n\nAUDIT REPORT:\n${auditReport}`;
+      const r = await runNodeWithConsensus(pEditor(selectedVoice), edIn, false, MAX, 2);
+      finalText = r.text;
+    }
+
+    stopTimer();
+    setChip(2,'fd'); setState(2,'done','Done');
+    setBody(2,`<div class="slbl" style="margin-bottom:8px">Polished Output</div><div class="rbox rn">${esc(finalText)}</div>`);
+
+    document.getElementById('finalText').textContent = finalText;
+    const fc = document.getElementById('finalCard');
+    fc.style.display = 'block';
+    if (pdfOutOn) document.getElementById('pdfBtn').style.display = 'inline-flex';
+    setTimeout(()=>fc.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+
+  } catch(e) {
+    stopTimer();
+    const ai=[0,1,2].find(x=>document.getElementById('badge'+x)?.className.includes('ba'))??0;
+    setState(ai,'error','Error');
+    setBody(ai,`<div style="font-size:13px;color:var(--red);line-height:1.7"><strong>Error:</strong> ${esc(e.message)}<br><br><span style="color:var(--fg3)">• Check your API keys in Settings<br>• Make sure selected models have matching keys<br>• Groq + Gemini together gives the best reliability</span></div>`);
+  }
+
+  running = false;
+  document.getElementById('runBtn').disabled = false;
+}
+
+function resetPipeline() {
+  running = false;
+  document.getElementById('pipelineForm').style.display = 'flex';
+  document.getElementById('runner').classList.remove('active');
+  document.getElementById('finalCard').style.display = 'none';
+  intentContext = '';
+  document.getElementById('intentBanner').style.display = 'none';
+  document.getElementById('clarifyCard').classList.remove('show');
+  document.getElementById('runBtn').disabled = false;
+}
+
+/* ════════════════════════════════════════
+   PDF EXPORT
+════════════════════════════════════════ */
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt',format:'a4'});
+  const text = document.getElementById('finalText').textContent;
+  const lines = doc.splitTextToSize(text, 495);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(11);
+  let y = 50;
+  doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text('Spert Pipeline Output', 50, y); y += 28;
+  doc.setFontSize(11); doc.setFont('helvetica','normal');
+  doc.setTextColor(120);
+  doc.text(new Date().toLocaleString(), 50, y); y += 20;
+  doc.setDrawColor(200); doc.line(50, y, 545, y); y += 20;
+  doc.setTextColor(30);
+  lines.forEach(line => {
+    if (y > 800) { doc.addPage(); y = 50; }
+    doc.text(line, 50, y); y += 15;
+  });
+  doc.save('spert-output.pdf');
+}
+
+function copyFinal() {
+  navigator.clipboard?.writeText(document.getElementById('finalText').textContent).then(()=>{
+    const b=document.querySelector('.fac-btn'); b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy',1500);
+  });
+}
+
+/* ════════════════════════════════════════
+   UPGRADE TAB
+════════════════════════════════════════ */
+function autoResize(el) {
+  el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+/* ── GITHUB AUTO-DEPLOY ── */
+function saveGhLocally() {
+  localStorage.setItem('spert_ghToken', document.getElementById('ghToken').value);
+  localStorage.setItem('spert_ghRepo',  document.getElementById('ghRepo').value.trim());
+  localStorage.setItem('spert_ghFile',  document.getElementById('ghFile').value.trim());
+}
+
+function loadGhLocally() {
+  const t = localStorage.getItem('spert_ghToken')||'';
+  const r = localStorage.getItem('spert_ghRepo')||'';
+  const f = localStorage.getItem('spert_ghFile')||'';
+  if (document.getElementById('ghToken')) document.getElementById('ghToken').value = t;
+  if (document.getElementById('ghRepo'))  document.getElementById('ghRepo').value  = r;
+  if (document.getElementById('ghFile'))  document.getElementById('ghFile').value  = f;
+}
+
+async function testGitHub() {
+  const token = document.getElementById('ghToken').value.trim();
+  const repo  = document.getElementById('ghRepo').value.trim();
+  const el    = document.getElementById('ghStatus');
+  if (!token || !repo) { el.textContent = 'Fill in token and repo first.'; el.style.color='var(--amber)'; return; }
+  el.textContent = 'Testing…'; el.style.color = 'var(--fg3)';
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}`, {
+      headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}
+    });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const d = await res.json();
+    el.textContent = '✓ Connected to ' + d.full_name;
+    el.style.color = 'var(--green)';
+    saveGhLocally();
+  } catch(e) {
+    el.textContent = '✗ ' + e.message;
+    el.style.color = 'var(--red)';
+  }
+}
+
+async function pushToGitHub(newHtml) {
+  const token = localStorage.getItem('spert_ghToken')||'';
+  const repo  = localStorage.getItem('spert_ghRepo')||'';
+  const file  = localStorage.getItem('spert_ghFile')||'spert-pipeline.html';
+  if (!token || !repo) return false;
+
+  // Get current file SHA (needed for update)
+  const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
+    headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}
+  });
+  if (!getRes.ok) throw new Error('Could not read file from GitHub: HTTP '+getRes.status);
+  const fileData = await getRes.json();
+  const sha = fileData.sha;
+
+  // Push updated content
+  const encoded = btoa(unescape(encodeURIComponent(newHtml)));
+  const putRes = await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
+    method: 'PUT',
+    headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},
+    body: JSON.stringify({
+      message: 'Spert auto-upgrade: ' + new Date().toISOString(),
+      content: encoded,
+      sha: sha
+    })
+  });
+  if (!putRes.ok) {
+    const err = await putRes.json();
+    throw new Error('GitHub push failed: '+(err.message||putRes.status));
+  }
+  return true;
+}
+
+async function sendUpgrade() {
+  const input = document.getElementById('upgradeInput').value.trim();
+  if (!input) return;
+  const keys = getKeys();
+  const key = keys.gemini || keys.groq;
+  if (!key) { addUpgradeMsg('ai','Please add a Gemini or Groq API key in Settings first.'); return; }
+
+  addUpgradeMsg('user', input);
+  document.getElementById('upgradeInput').value = '';
+  document.getElementById('upgradeSend').disabled = true;
+
+  const ghConnected = !!(localStorage.getItem('spert_ghToken') && localStorage.getItem('spert_ghRepo'));
+  addUpgradeMsg('ai', `<span class="spin" style="display:inline-block;vertical-align:middle;margin-right:6px"></span> Writing patch${ghConnected?' and deploying':''}…`, 'pending');
+
+  const currentCode = document.documentElement.outerHTML;
+
+  try {
+    const result = await quickCall(key, keys.gemini?'gemini':'groq',
+      `You are an expert frontend developer who modifies a single-file HTML application. The user will describe a feature to add. You will output ONLY the complete modified HTML file — the entire file from <!DOCTYPE html> to </html>, no truncation, no markdown fences, no commentary. Make the requested change cleanly and minimally. Do not break existing functionality. Preserve all existing scripts, styles, and content exactly except for the requested addition.`,
+      `FEATURE REQUEST: ${input}
+
+CURRENT HTML FILE (first 10000 chars):
+${currentCode.substring(0, 10000)}`
+    );
+
+    const pending = document.querySelector('.upgrade-msg[data-id="pending"]');
+
+    if (ghConnected) {
+      // Try GitHub auto-deploy
+      try {
+        await pushToGitHub(result);
+        if (pending) {
+          pending.innerHTML = `<strong style="color:var(--green)">✓ Deployed!</strong> <em>${esc(input)}</em> is live.<br><small style="color:var(--fg3)">Netlify is rebuilding — your site will update in ~30 seconds. Hard-refresh (Ctrl+Shift+R / Cmd+Shift+R) to see it.</small>`;
+          pending.removeAttribute('data-id');
+        }
+        const banner = document.getElementById('dlBanner');
+        banner.style.display = 'block';
+        banner.innerHTML = '✓ <strong>Auto-deployed via GitHub.</strong> Refresh in ~30 seconds to see your changes live.';
+      } catch(ghErr) {
+        // GitHub failed — fall back to download
+        if (pending) {
+          pending.innerHTML = `<strong>GitHub push failed</strong> (${esc(ghErr.message)}) — falling back to download.<br>Re-check your token and repo in Settings.`;
+          pending.removeAttribute('data-id');
+        }
+        triggerDownload(result);
+      }
+    } else {
+      // No GitHub — just download
+      if (pending) {
+        pending.innerHTML = `<strong>Done!</strong> Patch written for: <em>${esc(input)}</em><br><small style="color:var(--fg3)">Connect GitHub in Settings to auto-deploy instead of downloading.</small>`;
+        pending.removeAttribute('data-id');
+      }
+      triggerDownload(result);
+      const banner = document.getElementById('dlBanner');
+      banner.style.display = 'block';
+      banner.innerHTML = '↓ <strong>File downloaded.</strong> Drag to <a href="https://app.netlify.com/drop" target="_blank" style="color:var(--green)">Netlify Drop</a> — or connect GitHub in Settings to auto-deploy next time.';
+    }
+
+  } catch(e) {
+    const pending = document.querySelector('.upgrade-msg[data-id="pending"]');
+    if (pending) { pending.innerHTML = '<strong style="color:var(--red)">Error:</strong> '+esc(e.message); pending.removeAttribute('data-id'); }
+  }
+
+  document.getElementById('upgradeSend').disabled = false;
+}
+
+function triggerDownload(html) {
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='spert-pipeline-updated.html'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function addUpgradeMsg(type, html, dataId) {
+  const div = document.createElement('div');
+  div.className = 'upgrade-msg '+type;
+  div.innerHTML = html;
+  if (dataId) div.dataset.id = dataId;
+  const hist = document.getElementById('upgradeHistory');
+  hist.appendChild(div);
+  hist.scrollTop = hist.scrollHeight;
+}
+
+/* ════════════════════════════════════════
+   UTILS
+════════════════════════════════════════ */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+/* ════════════════════════════════════════
+   BOOT
+════════════════════════════════════════ */
+function boot() {
+  loadKeys();
+  loadGhLocally();
+  customModes = JSON.parse(localStorage.getItem('spert_modes')||'[]');
+  populateModeSelect();
+  renderCustomModes();
+  initModelList();
+  updatePassesDesc();
+  updateConsensusDesc();
+  document.getElementById('webSearchBtn').classList.add('active');
+  // Show connected status if GitHub is configured
+  if (localStorage.getItem('spert_ghToken') && localStorage.getItem('spert_ghRepo')) {
+    document.getElementById('statusDot').classList.add('on');
+    document.getElementById('statusDot').title = 'GitHub auto-deploy connected';
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
