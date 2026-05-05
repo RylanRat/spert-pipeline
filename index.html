@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en" __gcrremoteframetoken="fdf0aee1e1e4cb4da71ec4de683773ad"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>Spert — AI Multitool</title>
@@ -9,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Spert">
 <meta name="description" content="Self-hosted AI multitool — research, write, build, analyze.">
-<link rel="manifest" id="pwaManifest">
+<link rel="manifest" id="pwaManifest" href="blob:https://learninginprogress.netlify.app/368507fc-3af3-443e-8c6a-e9842b6c2e76">
 <script>
 // PWA: inject manifest as blob URL so it works from a single HTML file
 (function(){
@@ -19,7 +17,7 @@
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@300;400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -319,8 +317,8 @@ input[type=file]{display:none}
 .mbtn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:var(--r);cursor:pointer;border:var(--bord);background:transparent;color:var(--fg2)}
 .mbtn.primary{background:var(--accent);color:#fff;border-color:transparent;font-weight:600}
 </style>
-</head>
-<body class="theme-default">
+<style>#text-box { margin-top: 10px; }</style><style>#header { height: 50px; }</style><style>@media (max-width: 768px) { #text-box { width: 100%; } }</style></head>
+<body class="theme-default" data-__gcrweb-annotatedpagecontent-processed="7BD8FF73C27A276A43E4D11387F8D31E">
 <canvas id="artCanvas"></canvas>
 <div id="appWrap">
 
@@ -331,14 +329,14 @@ input[type=file]{display:none}
     <span class="nav-name">Spert</span>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showTab('ai',this)">AI</button>
-    <button class="nav-tab" onclick="showTab('upgrade',this)">Upgrade</button>
+    <button class="nav-tab" onclick="showTab('ai',this)">AI</button>
+    <button class="nav-tab active" onclick="showTab('upgrade',this)">Upgrade</button>
     <button class="nav-tab" onclick="showTab('projects',this)">Projects</button>
     <button class="nav-tab" onclick="showTab('apps',this)">Apps</button>
     <button class="nav-tab" onclick="showTab('settings',this)">Settings</button>
   </div>
   <div class="nav-right">
-    <div class="status-dot" id="statusDot" title="Cloud sync"></div>
+    <div class="status-dot" id="statusDot" title="GitHub connected"></div>
     <button class="nav-icon-btn" onclick="toggleModePanel()" title="AI settings">⚙</button>
   </div>
 </nav>
@@ -349,7 +347,7 @@ input[type=file]{display:none}
 </div>
 
 <!-- ══════ AI TAB ══════ -->
-<div class="tab-panel active" id="tab-ai">
+<div class="tab-panel" id="tab-ai">
 <div class="ai-layout">
   <div class="chat-history" id="chatHistory">
     <div class="chat-empty" id="chatEmpty">
@@ -381,7 +379,7 @@ input[type=file]{display:none}
         <span class="mode-lbl">Passes</span>
         <div class="passes-row">
           <div class="pbtn" onclick="adjPasses(-1)">−</div>
-          <input class="pnum" id="passesNum" type="number" min="1" max="5" value="1">
+          <input class="pnum" id="passesNum" type="number" min="1" max="5" value="1" __gcruniqueid="1">
           <div class="pbtn" onclick="adjPasses(1)">+</div>
           <span style="font-size:11px;color:var(--fg4);font-family:var(--fm)" id="passDesc">1 pass — fastest</span>
         </div>
@@ -407,9 +405,7 @@ input[type=file]{display:none}
   <div class="input-dock">
     <div class="file-chips" id="fileChips"></div>
     <div class="input-row">
-      <textarea class="main-input" id="mainInput" placeholder="Ask me anything — research, write, build, analyze, create…" rows="1"
-        oninput="autoResize(this)"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+      <textarea class="main-input" id="mainInput" placeholder="Ask me anything — research, write, build, analyze, create…" rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendMessage()}" __gcruniqueid="2" style="height: 45px;"></textarea>
       <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
     </div>
     <div class="input-tools">
@@ -420,18 +416,39 @@ input[type=file]{display:none}
       <div class="itool" onclick="newChat()">✚ New chat</div>
     </div>
   </div>
-  <input type="file" id="fileInput" multiple accept="image/*,.pdf,.txt,.md" onchange="handleFiles(this.files)">
+  <input type="file" id="fileInput" multiple="" accept="image/*,.pdf,.txt,.md" onchange="handleFiles(this.files)">
 </div>
 </div>
 
 <!-- ══════ UPGRADE TAB ══════ -->
-<div class="tab-panel" id="tab-upgrade">
+<div class="tab-panel active" id="tab-upgrade">
 <div class="upgrade-layout">
-  <div class="upgrade-chat" id="upgradeChat"></div>
+  <div class="upgrade-chat" id="upgradeChat"><div class="umsg ai"><strong style="color:var(--accent)">Spert Upgrade Studio</strong><br>Tell me what you want to add or change. I'll explain the plan, give you a checklist of changes to approve, and apply only what you want.<br><br><span style="color:var(--fg3)">Try: "Add a history sidebar", "Make the font bigger", "Add a word count", or "What should I add next?"</span></div><div class="umsg user">i have to scroll down to access this text box.</div><div class="umsg ai"><div style="line-height:1.7;padding-bottom:12px;border-bottom:1px solid var(--bg3);margin-bottom:12px">To improve accessibility, I will make adjustments to the layout so that the text box is more easily accessible without requiring scrolling. <br>I will adjust the positioning of the text box and potentially resize other elements to make room for it. <br>This change will enhance the overall user experience by reducing the need for scrolling.<p></p><p style="margin-top:8px">Here are the specific changes:<br>1. Adjust the margin of the text box to bring it closer to the top of the page.<br>2. Reduce the height of the header section to make room for the text box.<br>3. Add a CSS rule to ensure the text box is visible and accessible on various screen sizes.</p><p style="margin-top:8px">Consider also upgrading the responsive design of the page to better handle different screen sizes and devices.</p></div><div class="patch-proposal">
+        <div class="patch-title">📋 Proposed Changes — uncheck any you don't want</div>
+        <div class="patch-checklist">
+          
+            <label class="patch-item">
+              <input type="checkbox" checked="" data-change-id="c1" data-patch-id="patch_1777997609564">
+              <div class="patch-item-text">Adjust text box margin<small>Bring the text box closer to the top of the page</small></div>
+            </label>
+            <label class="patch-item">
+              <input type="checkbox" checked="" data-change-id="c2" data-patch-id="patch_1777997609564">
+              <div class="patch-item-text">Reduce header height<small>Make room for the text box by reducing the header height</small></div>
+            </label>
+            <label class="patch-item">
+              <input type="checkbox" checked="" data-change-id="c3" data-patch-id="patch_1777997609564">
+              <div class="patch-item-text">Add responsive CSS rule<small>Ensure the text box is visible and accessible on various screen sizes</small></div>
+            </label>
+        </div>
+        <div class="patch-btns">
+          <button class="pbtn-primary" onclick="applySelectedChanges('patch_1777997609564',this)" disabled="">✓ Apply selected</button>
+          <button class="pbtn-secondary" onclick="refineUpgrade('Adjust text box margin, Reduce header height, Add responsive CSS rule')">✎ Modify</button>
+          <button class="pbtn-ghost" onclick="this.closest('.patch-proposal').style.opacity='.4';this.closest('.patch-proposal').style.pointerEvents='none'">✕ Discard</button>
+        </div>
+        <div class="apply-progress" id="prog_patch_1777997609564" style="display: flex;"><div class="apply-step done"><span class="si">✓</span> Adjust text box margin</div><div class="apply-step done"><span class="si">✓</span> Reduce header height</div><div class="apply-step done"><span class="si">✓</span> Add responsive CSS rule</div><div class="apply-step"><span class="si"><span class="spin"></span></span> Pushing to GitHub…</div></div>
+      </div></div></div>
   <div class="upgrade-input-dock">
-    <textarea class="upgrade-input" id="upgradeInput" placeholder="Describe what you want to add or change, or ask a question… (Enter to send)" rows="1"
-      oninput="autoResize(this)"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendUpgrade()}"></textarea>
+    <textarea class="upgrade-input" id="upgradeInput" placeholder="Describe what you want to add or change, or ask a question… (Enter to send)" rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendUpgrade()}" __gcruniqueid="3" style="height: auto;"></textarea>
     <button class="upgrade-send" id="upgradeSend" onclick="sendUpgrade()">↑</button>
   </div>
 </div>
@@ -444,7 +461,7 @@ input[type=file]{display:none}
     <div class="proj-title">Projects</div>
     <button class="new-proj-btn" onclick="newProject()">+ New Project</button>
   </div>
-  <div class="proj-grid" id="projGrid"></div>
+  <div class="proj-grid" id="projGrid"><div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">No projects yet</div><div class="empty-sub">Click + New Project to create one</div></div></div>
   <div class="proj-detail" id="projDetail"></div>
 </div>
 </div>
@@ -456,7 +473,31 @@ input[type=file]{display:none}
     <div class="apps-title">Apps</div>
     <button class="new-proj-btn" onclick="requestNewApp()">+ Request App</button>
   </div>
-  <div id="appGrid" class="app-grid"></div>
+  <div id="appGrid" class="app-grid"><div class="app-card"><div class="app-icon">🎲</div>
+      <div class="app-name">3D Model Viewer</div>
+      <div class="app-desc">Create and view 3D shapes, models, and scenes</div>
+      <div class="app-actions">
+        <div class="app-btn primary" onclick="openApp('3d-viewer')">Open</div>
+        
+      </div></div><div class="app-card"><div class="app-icon">📊</div>
+      <div class="app-name">Data Visualizer</div>
+      <div class="app-desc">Paste data and generate charts automatically</div>
+      <div class="app-actions">
+        <div class="app-btn primary" onclick="openApp('data-viz')">Open</div>
+        
+      </div></div><div class="app-card"><div class="app-icon">⚡</div>
+      <div class="app-name">Code Runner</div>
+      <div class="app-desc">Write and run HTML/JS/CSS code live</div>
+      <div class="app-actions">
+        <div class="app-btn primary" onclick="openApp('code-run')">Open</div>
+        
+      </div></div><div class="app-card"><div class="app-icon">📝</div>
+      <div class="app-name">Quick Notes</div>
+      <div class="app-desc">Persistent notes with AI assistance</div>
+      <div class="app-actions">
+        <div class="app-btn primary" onclick="openApp('notes')">Open</div>
+        
+      </div></div></div>
 </div>
 </div>
 
@@ -468,7 +509,7 @@ input[type=file]{display:none}
     <div class="stitle">Appearance</div>
     <div class="sdesc">Theme, brightness, and background art.</div>
     <div class="scard">
-      <div class="theme-grid" id="themeGrid"></div>
+      <div class="theme-grid" id="themeGrid"><div class="theme-swatch active" data-t="default"><div class="swatch-circle" style="background:#09090b;border:2px solid #f97316"><span style="color:#f97316;font-size:10px">A</span></div><div class="swatch-name">Default</div></div><div class="theme-swatch" data-t="ocean"><div class="swatch-circle" style="background:#040d18;border:2px solid #38bdf8"><span style="color:#38bdf8;font-size:10px">A</span></div><div class="swatch-name">Ocean</div></div><div class="theme-swatch" data-t="forest"><div class="swatch-circle" style="background:#030f08;border:2px solid #4ade80"><span style="color:#4ade80;font-size:10px">A</span></div><div class="swatch-name">Forest</div></div><div class="theme-swatch" data-t="violet"><div class="swatch-circle" style="background:#0a040f;border:2px solid #c084fc"><span style="color:#c084fc;font-size:10px">A</span></div><div class="swatch-name">Violet</div></div><div class="theme-swatch" data-t="crimson"><div class="swatch-circle" style="background:#0f0406;border:2px solid #f43f5e"><span style="color:#f43f5e;font-size:10px">A</span></div><div class="swatch-name">Crimson</div></div><div class="theme-swatch" data-t="gold"><div class="swatch-circle" style="background:#0d0b04;border:2px solid #fbbf24"><span style="color:#fbbf24;font-size:10px">A</span></div><div class="swatch-name">Gold</div></div><div class="theme-swatch" data-t="light"><div class="swatch-circle" style="background:#f8f9fa;border:2px solid #f97316"><span style="color:#f97316;font-size:10px">A</span></div><div class="swatch-name">Light</div></div></div>
       <div class="sdivider"></div>
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:12px;color:var(--fg3);min-width:70px">Brightness</span>
@@ -479,7 +520,7 @@ input[type=file]{display:none}
       </div>
       <div class="sdivider"></div>
       <div style="font-size:12px;font-weight:600;color:var(--fg2);margin-bottom:6px">Background Art</div>
-      <div class="art-grid" id="artGrid"></div>
+      <div class="art-grid" id="artGrid"><div class="art-option active" data-a="none"><canvas width="80" height="48" class="art-preview" style="background: var(--bg2);"></canvas><div class="art-name">None</div></div><div class="art-option" data-a="geo"><canvas width="80" height="48" class="art-preview" style="background: var(--bg2);"></canvas><div class="art-name">Geometric</div></div><div class="art-option" data-a="waves"><canvas width="80" height="48" class="art-preview" style="background: var(--bg2);"></canvas><div class="art-name">Waves</div></div><div class="art-option" data-a="stars"><canvas width="80" height="48" class="art-preview" style="background: var(--bg2);"></canvas><div class="art-name">Stars</div></div><div class="art-option" data-a="grid"><canvas width="80" height="48" class="art-preview" style="background: var(--bg2);"></canvas><div class="art-name">Grid</div></div><div class="art-option" data-a="flow"><canvas width="80" height="48" class="art-preview" style="background: var(--bg2);"></canvas><div class="art-name">Flow</div></div></div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
         <div class="toggle-sm" id="animArtToggle" onclick="this.classList.toggle('on');toggleAnimArt()"></div>
         <span style="font-size:12px;color:var(--fg3)">Animate art (subtle motion)</span>
@@ -493,29 +534,29 @@ input[type=file]{display:none}
     <div class="scard">
       <div class="srow">
         <div class="slabel">Google Gemini <span class="sbadge sb-g">Best · Web Search · 1500/day</span></div>
-        <input class="sinput" id="kGemini" type="password" placeholder="AIza..." autocomplete="off" spellcheck="false">
+        <input class="sinput" id="kGemini" type="password" placeholder="AIza..." autocomplete="off" spellcheck="false" __gcruniqueid="4">
         <div class="shint">Free at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></div>
       </div>
       <div class="sdivider"></div>
       <div class="srow">
         <div class="slabel">Groq <span class="sbadge sb-b">Fastest · 1000/model/day</span></div>
-        <input class="sinput" id="kGroq" type="password" placeholder="gsk_..." autocomplete="off" spellcheck="false">
+        <input class="sinput" id="kGroq" type="password" placeholder="gsk_..." autocomplete="off" spellcheck="false" __gcruniqueid="5">
         <div class="shint">Free at <a href="https://console.groq.com" target="_blank">console.groq.com</a></div>
       </div>
       <div class="sdivider"></div>
       <div class="srow">
         <div class="slabel">Mistral <span class="sbadge sb-p">1B tokens/month</span></div>
-        <input class="sinput" id="kMistral" type="password" placeholder="..." autocomplete="off" spellcheck="false">
+        <input class="sinput" id="kMistral" type="password" placeholder="..." autocomplete="off" spellcheck="false" __gcruniqueid="6">
         <div class="shint">Free at <a href="https://console.mistral.ai" target="_blank">console.mistral.ai</a></div>
       </div>
       <div class="sdivider"></div>
       <div class="srow">
         <div class="slabel">OpenRouter <span class="sbadge sb-o">30+ free models</span></div>
-        <input class="sinput" id="kOpenRouter" type="password" placeholder="sk-or-..." autocomplete="off" spellcheck="false">
+        <input class="sinput" id="kOpenRouter" type="password" placeholder="sk-or-..." autocomplete="off" spellcheck="false" __gcruniqueid="7">
         <div class="shint">Free at <a href="https://openrouter.ai" target="_blank">openrouter.ai</a></div>
       </div>
       <button class="save-btn" onclick="saveKeys()">Save Keys</button>
-      <div class="save-ok" id="saveOk">✓ Keys saved</div>
+      <div class="save-ok" id="saveOk" style="display: none;">✓ Keys saved</div>
     </div>
   </div>
 
@@ -524,8 +565,8 @@ input[type=file]{display:none}
     <div class="sdesc">Saves keys, settings, chats, and patches across all your devices.</div>
     <div class="scard">
       <div class="srow">
-        <input class="sinput" id="sbUrl" placeholder="Supabase Project URL (https://xxx.supabase.co)" oninput="saveSbLocally()">
-        <input class="sinput" id="sbKey" type="password" placeholder="Supabase anon key" oninput="saveSbLocally()">
+        <input class="sinput" id="sbUrl" placeholder="Supabase Project URL (https://xxx.supabase.co)" oninput="saveSbLocally()" __gcruniqueid="8">
+        <input class="sinput" id="sbKey" type="password" placeholder="Supabase anon key" oninput="saveSbLocally()" __gcruniqueid="9">
         <div style="display:flex;gap:8px;align-items:center">
           <button class="test-btn" id="sbTestBtn" onclick="testSupabase()">Test Connection</button>
           <button class="test-btn" onclick="clearPatches()" title="Remove all saved Upgrade Studio patches from cloud (frees space, doesn't undo changes)">🗑 Clear Patches</button>
@@ -540,7 +581,7 @@ input[type=file]{display:none}
     <div class="stitle">Models</div>
     <div class="sdesc">Select which models to use. More selected = better consensus but slower. Each Groq model has its own daily limit.</div>
     <div class="scard">
-      <div class="model-chips" id="modelChips"></div>
+      <div class="model-chips" id="modelChips"><div class="model-chip sel" id="mchip-gem-f25" title="gemini-2.5-flash (gemini)">gemini-2.5-flash</div><div class="model-chip sel" id="mchip-gem-f2" title="gemini-2.0-flash (gemini)">gemini-2.0-flash</div><div class="model-chip sel" id="mchip-gq-l70" title="llama-3.3-70b-versatile (groq)">llama-3.3-70b</div><div class="model-chip sel" id="mchip-gq-gpt" title="openai/gpt-oss-120b (groq)">gpt-oss-120b</div><div class="model-chip sel" id="mchip-gq-ds" title="deepseek-r1-distill-llama-70b (groq)">deepseek-r1-distill-llama-70b</div><div class="model-chip sel" id="mchip-gq-qwq" title="qwen-qwq-32b (groq)">qwen-qwq-32b</div><div class="model-chip sel" id="mchip-mis-lg" title="mistral-large-latest (mistral)">mistral-large</div><div class="model-chip sel" id="mchip-or-r1" title="deepseek/deepseek-r1:free (openrouter)">deepseek-r1</div><div class="model-chip sel" id="mchip-or-v3" title="deepseek/deepseek-v3:free (openrouter)">deepseek-v3</div></div>
       <div style="font-size:11px;color:var(--fg4);margin-top:6px">✓ = active  ·  Gemini needed for web search  ·  Groq = fastest</div>
     </div>
   </div>
@@ -550,9 +591,9 @@ input[type=file]{display:none}
     <div class="sdesc">Upgrade Studio pushes changes directly to GitHub. Netlify redeploys in ~30 sec.</div>
     <div class="scard">
       <div class="srow">
-        <input class="sinput" id="ghToken" type="password" placeholder="GitHub token (ghp_...)" autocomplete="off" spellcheck="false" oninput="saveGhLocally()">
-        <input class="sinput" id="ghRepo" type="text" placeholder="username/repo-name" oninput="saveGhLocally()">
-        <input class="sinput" id="ghFile" type="text" placeholder="File path (default: index.html)" oninput="saveGhLocally()">
+        <input class="sinput" id="ghToken" type="password" placeholder="GitHub token (ghp_...)" autocomplete="off" spellcheck="false" oninput="saveGhLocally()" __gcruniqueid="10">
+        <input class="sinput" id="ghRepo" type="text" placeholder="username/repo-name" oninput="saveGhLocally()" __gcruniqueid="11">
+        <input class="sinput" id="ghFile" type="text" placeholder="File path (default: index.html)" oninput="saveGhLocally()" __gcruniqueid="12">
         <div style="display:flex;gap:8px;align-items:center">
           <button class="test-btn" id="ghTestBtn" onclick="testGitHub()">Test Connection</button>
           <div class="test-status" id="ghStatus"></div>
@@ -585,7 +626,7 @@ input[type=file]{display:none}
   <div class="modal-box">
     <div class="modal-title">Import Chat from Another AI</div>
     <div class="modal-desc">Paste exported chat text from ChatGPT, Gemini, or any AI. Spert will open it as a new chat with full history. (Export from ChatGPT: ··· menu → Export data. Gemini: copy conversation text.)</div>
-    <textarea class="modal-textarea" id="importText" placeholder="Paste chat text here…"></textarea>
+    <textarea class="modal-textarea" id="importText" placeholder="Paste chat text here…" __gcruniqueid="13"></textarea>
     <div class="modal-btns">
       <button class="mbtn" onclick="document.getElementById('importModal').classList.remove('open')">Cancel</button>
       <button class="mbtn primary" onclick="importChat()">Import →</button>
@@ -602,12 +643,12 @@ input[type=file]{display:none}
     <div class="app-win-header">
       <div class="app-win-title" id="appWinTitle">App</div>
       <div style="display:flex;gap:6px;align-items:center">
-        <textarea id="appWinPrompt" placeholder="Request an upgrade to this app…" rows="1" style="flex:1;padding:6px 10px;font-size:12px;font-family:var(--ff);border:var(--bord);border-radius:var(--r);background:var(--bg3);color:var(--fg);outline:none;resize:none;min-width:200px" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();upgradeApp()}"></textarea>
+        <textarea id="appWinPrompt" placeholder="Request an upgrade to this app…" rows="1" style="flex:1;padding:6px 10px;font-size:12px;font-family:var(--ff);border:var(--bord);border-radius:var(--r);background:var(--bg3);color:var(--fg);outline:none;resize:none;min-width:200px" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();upgradeApp()}" __gcruniqueid="14"></textarea>
         <button onclick="upgradeApp()" style="padding:6px 12px;font-size:12px;font-weight:600;border:none;border-radius:var(--r);background:var(--accent);color:#fff;cursor:pointer">Upgrade</button>
         <button class="app-win-close" onclick="closeAppWindow()">✕</button>
       </div>
     </div>
-    <iframe id="appFrame" sandbox="allow-scripts allow-forms allow-modals"></iframe>
+    <iframe id="appFrame" sandbox="allow-scripts allow-forms allow-modals" __gcrchildframeremotetoken="b22a80668f8f9b7b2ab58affb40bbf04"></iframe>
   </div>
 </div>
 
@@ -1949,5 +1990,6 @@ function toggleVoiceInput() {
 
 boot();
 </script>
-</body>
-</html>
+
+
+</body></html>
