@@ -897,7 +897,7 @@ async function testGitHubPush() {
     if (!getRes.ok) throw new Error('Cannot read file: HTTP '+getRes.status);
     const d=await getRes.json();
     const decoded=decodeURIComponent(escape(atob(d.content.replace(/\n/g,''))));
-    const patched=decoded.replace('<!-- spert-test-marker -->','').trimEnd()+'\n<!-- spert-test-marker -->';
+    const patched=decoded.replace('','').trimEnd()+'\n<!-- spert-test-marker -->';
     const encoded=htmlToBase64(patched);
     const putRes=await fetch(`https://api.github.com/repos/${repo}/contents/${file}`,{
       method:'PUT',
@@ -2501,3 +2501,4 @@ boot();
 </script>
 </body>
 </html>
+<!-- spert-test-marker -->
